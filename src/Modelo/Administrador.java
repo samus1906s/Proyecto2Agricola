@@ -9,7 +9,7 @@ package Modelo;
  * @author Reynold
  */
 public enum Administrador {
-    JEFE("Jefe de área", 1),
+    JEFE("Jefe", 1),
     SUBJEFE("Subjefe", 2),
     CAPATAZ("Capataz", 3);
 
