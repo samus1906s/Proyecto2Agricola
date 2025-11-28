@@ -6,7 +6,7 @@ package Modelo;
 
 /**
  *
- * @author Student
+ * @author Reynold
  */
 public enum TrabajadorCampo {
     RECOLECTOR("Recolector", 1),
