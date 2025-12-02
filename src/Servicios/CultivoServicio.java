@@ -4,8 +4,12 @@
  */
 package Servicios;
 
+import DAOs.CultivoDAO;
 import DTOs.DTOCultivo;
-import Servicios.CultivoServicio;
+import Interfaces.ICultivoDAO;
+import Mappers.MapperCultivo;
+import Modelo.Cultivo;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,34 +18,51 @@ import java.util.List;
  */
 public class CultivoServicio {
     
-    private final CultivoServicio servicio;
+   private ICultivoDAO dao;
+    private MapperCultivo mapper;
 
-    public ControladorCultivo() {
-        this.servicio = new CultivoServicio();
+    public CultivoServicio() {
+        this.dao = new CultivoDAO();
+        this.mapper = new MapperCultivo();
     }
 
-    public boolean registrarCultivo(DTOCultivo dto) throws Exception {
-        return servicio.registrar(dto);
+    public boolean registrar(DTOCultivo dto) throws Exception {
+        Cultivo cultivo = mapper.ToEntidad(dto);
+        return dao.crear(cultivo);
     }
 
-    public boolean actualizarCultivo(DTOCultivo dto) throws Exception {
-        return servicio.actualizar(dto);
+    public boolean actualizar(DTOCultivo dto) throws Exception {
+        Cultivo cultivo = mapper.ToEntidad(dto);
+        return dao.actualizar(cultivo);
     }
 
-    public boolean eliminarCultivo(int id) throws Exception {
-        return servicio.eliminar(id);
+    public boolean eliminar(int id) throws Exception {
+        return dao.eliminar(id);
     }
 
-    public DTOCultivo obtenerCultivo(int id) throws Exception {
-        return servicio.obtenerPorId(id);
+    public DTOCultivo obtenerPorId(int id) throws Exception {
+        Cultivo c = dao.Leer(id);
+        return mapper.ToDto(c);
     }
 
-    public List<DTOCultivo> listarCultivos() throws Exception {
-        return servicio.listar();
+    public List<DTOCultivo> listar() throws Exception {
+        List<Cultivo> lista = dao.lista();
+        List<DTOCultivo> resultado = new ArrayList<>();
+
+        for (Cultivo c : lista) {
+            resultado.add(mapper.ToDto(c));
+        }
+        return resultado;
     }
 
     public List<DTOCultivo> buscar(String texto) throws Exception {
-        return servicio.buscar(texto);
+        List<Cultivo> lista = dao.Buscar(texto);
+        List<DTOCultivo> resultado = new ArrayList<>();
+        
+        for (Cultivo c : lista) {
+            resultado.add(mapper.ToDto(c));
+        }
+        return resultado;
     }
     
 }
