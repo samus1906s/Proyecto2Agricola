@@ -6,6 +6,7 @@ package Vista;
 
 import java.awt.Image;
 import javax.swing.ImageIcon;
+import javax.swing.JInternalFrame;
 
 /**
  *
@@ -14,7 +15,6 @@ import javax.swing.ImageIcon;
 public class FrmMenuPrincipal extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmMenuPrincipal.class.getName());
-
     /**
      * Creates new form FrmMenuPrincipal
      */
@@ -34,6 +34,17 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         lblFondo.setIcon(new ImageIcon(imagenEscalada));
     }
 
+    public void abrirVentana(JInternalFrame frame) {
+        if (!frame.isVisible()) {
+            DesktopPane.add(frame);
+            frame.setVisible(true);
+        }
+        try {
+            frame.setSelected(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -50,6 +61,10 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         mnbarraSistema = new javax.swing.JMenuBar();
         mnSistemaProducciónAgricola = new javax.swing.JMenu();
         mnCultivos = new javax.swing.JMenuItem();
+        mnTrabajadores = new javax.swing.JMenuItem();
+        mnProduccion = new javax.swing.JMenuItem();
+        jMenuItem3 = new javax.swing.JMenuItem();
+        mnUsuarios = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -88,6 +103,28 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         });
         mnSistemaProducciónAgricola.add(mnCultivos);
 
+        mnTrabajadores.setText("Trabajadores");
+        mnSistemaProducciónAgricola.add(mnTrabajadores);
+
+        mnProduccion.setText("Producción");
+        mnProduccion.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnProduccionActionPerformed(evt);
+            }
+        });
+        mnSistemaProducciónAgricola.add(mnProduccion);
+
+        jMenuItem3.setText("jMenuItem3");
+        mnSistemaProducciónAgricola.add(jMenuItem3);
+
+        mnUsuarios.setText("Usuarios");
+        mnUsuarios.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnUsuariosActionPerformed(evt);
+            }
+        });
+        mnSistemaProducciónAgricola.add(mnUsuarios);
+
         mnbarraSistema.add(mnSistemaProducciónAgricola);
 
         setJMenuBar(mnbarraSistema);
@@ -107,14 +144,24 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void mnCultivosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnCultivosActionPerformed
-        IntFrmProduccion internalFrame = new IntFrmProduccion();
-        DesktopPane.add(internalFrame);
-        internalFrame.setVisible(true);
+        
     }//GEN-LAST:event_mnCultivosActionPerformed
 
     private void DesktopPaneComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_DesktopPaneComponentResized
         ajustarImagenFondo();
     }//GEN-LAST:event_DesktopPaneComponentResized
+
+    private void mnProduccionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnProduccionActionPerformed
+        IntFrmProduccion internalFrameProduccion = new IntFrmProduccion();
+        DesktopPane.add(internalFrameProduccion);
+        internalFrameProduccion.setVisible(true);
+    }//GEN-LAST:event_mnProduccionActionPerformed
+
+    private void mnUsuariosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnUsuariosActionPerformed
+        IntFrmUsuario internalFrameUsuario = new IntFrmUsuario();
+        DesktopPane.add(internalFrameUsuario);
+        internalFrameUsuario.setVisible(true);
+    }//GEN-LAST:event_mnUsuariosActionPerformed
 
     /**
      * @param args the command line arguments
@@ -143,9 +190,13 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JDesktopPane DesktopPane;
+    private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JLabel lblFondo;
     private javax.swing.JMenuItem mnCultivos;
+    private javax.swing.JMenuItem mnProduccion;
     private javax.swing.JMenu mnSistemaProducciónAgricola;
+    private javax.swing.JMenuItem mnTrabajadores;
+    private javax.swing.JMenuItem mnUsuarios;
     private javax.swing.JMenuBar mnbarraSistema;
     private javax.swing.JPanel pnlLabelFondo;
     // End of variables declaration//GEN-END:variables

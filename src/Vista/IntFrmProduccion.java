@@ -11,6 +11,7 @@ import java.awt.Dimension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import javax.swing.JDesktopPane;
 import javax.swing.JOptionPane;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -24,13 +25,19 @@ import org.jfree.data.category.DefaultCategoryDataset;
  */
 public class IntFrmProduccion extends javax.swing.JInternalFrame {
 
-    ControladorProduccion controlador = new ControladorProduccion();
+    private ControladorProduccion controlador;
 
     /**
      * Creates new form IntFrmProduccion
      */
     public IntFrmProduccion() {
+        this(new ControladorProduccion());
+    }
+    
+    public IntFrmProduccion(ControladorProduccion controlador) {
+        this.controlador = controlador;
         initComponents();
+        cargarTabla();
         generarGrafica();
         personalizarTituloYBorde();
     }
@@ -58,9 +65,13 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
         //}
     //}
 
+    private void cargarTabla() {
+        // TODO: Llamar a controlador.listarProducciones() y llenar tabla
+        // Este método existe para que el constructor compile y para que lo rellenes.
+    }
+    
     private void generarGrafica() {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-
         dataset.addValue(75, "Productividad", "Actual");
 
         JFreeChart chart = ChartFactory.createBarChart(
@@ -73,28 +84,30 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
             true,
             false
         );
-        
+
         ChartPanel panel = new ChartPanel(chart);
+        
         panel.setPreferredSize(new Dimension(363, 273));
         panel.setSize(new Dimension(363, 273));
-
         panel.setOpaque(false);
 
         pnlGrafica.setLayout(new BorderLayout());
+        pnlGrafica.removeAll();
         pnlGrafica.add(panel, BorderLayout.CENTER);
-        pnlGrafica.validate();
+        pnlGrafica.revalidate();
+        pnlGrafica.repaint();
     }
 
     private void personalizarTituloYBorde() {
         try {
-            javax.swing.plaf.basic.BasicInternalFrameUI ui =(javax.swing.plaf.basic.BasicInternalFrameUI) this.getUI();
+            javax.swing.plaf.basic.BasicInternalFrameUI ui = (javax.swing.plaf.basic.BasicInternalFrameUI) this.getUI();
 
-            java.awt.Color verdeTitulo = new java.awt.Color(232, 245, 233);  
+            java.awt.Color verdeTitulo = new java.awt.Color(232, 245, 233);
             javax.swing.JComponent titleBar = ui.getNorthPane();
             titleBar.setBackground(verdeTitulo);
             titleBar.setOpaque(true);
 
-            this.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204,255,204), 4));
+            this.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 255, 204), 4));
 
             java.beans.PropertyChangeListener listener = evt -> {
                 if ("frameType".equals(evt.getPropertyName())) {
@@ -210,12 +223,13 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
         pnlGrafica = new javax.swing.JPanel();
         btnPDF = new javax.swing.JButton();
         btnXML = new javax.swing.JButton();
-        jPanel3 = new javax.swing.JPanel();
+        pnlBotones = new javax.swing.JPanel();
         btnLimpiar = new javax.swing.JButton();
         btnRegistrar = new javax.swing.JButton();
         btnActualizar = new javax.swing.JButton();
         btnEditar = new javax.swing.JButton();
         btnCancelar = new javax.swing.JButton();
+        btnMostrarTabla = new javax.swing.JButton();
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -418,14 +432,14 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
                 .addGap(14, 14, 14))
         );
 
-        jPanel3.setBackground(new java.awt.Color(45, 95, 63));
-        jPanel3.setLayout(new java.awt.GridLayout(1, 5));
+        pnlBotones.setBackground(new java.awt.Color(45, 95, 63));
+        pnlBotones.setLayout(new java.awt.GridLayout(1, 6));
 
         btnLimpiar.setBackground(new java.awt.Color(204, 255, 204));
         btnLimpiar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Limpiar.png"))); // NOI18N
         btnLimpiar.setBorderPainted(false);
         btnLimpiar.setFocusPainted(false);
-        jPanel3.add(btnLimpiar);
+        pnlBotones.add(btnLimpiar);
 
         btnRegistrar.setBackground(new java.awt.Color(204, 255, 204));
         btnRegistrar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Guardar.png"))); // NOI18N
@@ -436,7 +450,7 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
                 btnRegistrarActionPerformed(evt);
             }
         });
-        jPanel3.add(btnRegistrar);
+        pnlBotones.add(btnRegistrar);
 
         btnActualizar.setBackground(new java.awt.Color(204, 255, 204));
         btnActualizar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Refrescar.png"))); // NOI18N
@@ -447,13 +461,13 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
                 btnActualizarActionPerformed(evt);
             }
         });
-        jPanel3.add(btnActualizar);
+        pnlBotones.add(btnActualizar);
 
         btnEditar.setBackground(new java.awt.Color(204, 255, 204));
         btnEditar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Editar.png"))); // NOI18N
         btnEditar.setBorderPainted(false);
         btnEditar.setFocusPainted(false);
-        jPanel3.add(btnEditar);
+        pnlBotones.add(btnEditar);
 
         btnCancelar.setBackground(new java.awt.Color(204, 255, 204));
         btnCancelar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Cancelar.png"))); // NOI18N
@@ -464,7 +478,16 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
                 btnCancelarActionPerformed(evt);
             }
         });
-        jPanel3.add(btnCancelar);
+        pnlBotones.add(btnCancelar);
+
+        btnMostrarTabla.setBackground(new java.awt.Color(204, 255, 204));
+        btnMostrarTabla.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Tabla.png"))); // NOI18N
+        btnMostrarTabla.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnMostrarTablaActionPerformed(evt);
+            }
+        });
+        pnlBotones.add(btnMostrarTabla);
 
         javax.swing.GroupLayout pnlPrincipalLayout = new javax.swing.GroupLayout(pnlPrincipal);
         pnlPrincipal.setLayout(pnlPrincipalLayout);
@@ -474,7 +497,7 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
             .addGroup(pnlPrincipalLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(pnlPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(pnlBotones, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(pnlPrincipalLayout.createSequentialGroup()
                         .addComponent(pnlDatos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
@@ -490,7 +513,7 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
                     .addComponent(pnlInformacion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(pnlDatos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(pnlBotones, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(30, 30, 30))
         );
 
@@ -511,10 +534,11 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
     private void btnRegistrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegistrarActionPerformed
         try {
             ProduccionDTO dto = obtenerDTODesdeFormulario();
-            boolean ok = controlador.registrarProduccion(dto); // controlador puede lanzar Exception
+            boolean ok = controlador.registrarProduccion(dto); 
             if (ok) {
                 JOptionPane.showMessageDialog(this, "Producción registrada correctamente.");
                 limpiarFormulario();
+                cargarTabla(); 
             } else {
                 JOptionPane.showMessageDialog(this, "No se pudo registrar.");
             }
@@ -524,9 +548,9 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
     }//GEN-LAST:event_btnRegistrarActionPerformed
 
     private void btnActualizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarActionPerformed
-         try {
-            ProduccionDTO dto = obtenerDTODesdeFormulario();
-            if (dto.getIdProduccion() == null) {
+        try {
+           ProduccionDTO dto = obtenerDTODesdeFormulario();
+           if (dto.getIdProduccion() == null) {
                 JOptionPane.showMessageDialog(this, "No hay ID para actualizar.", "Atención", JOptionPane.WARNING_MESSAGE);
                 return;
             }
@@ -534,10 +558,11 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
             if (ok) {
                 JOptionPane.showMessageDialog(this, "Registro actualizado correctamente.");
                 limpiarFormulario();
+                cargarTabla();
             } else {
                 JOptionPane.showMessageDialog(this, "No se actualizó el registro.");
             }
-        } catch (Exception ex) {
+            } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error al actualizar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnActualizarActionPerformed
@@ -556,6 +581,7 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
                 if (ok) {
                     JOptionPane.showMessageDialog(this, "Registro eliminado.");
                     limpiarFormulario();
+                    cargarTabla();
                 } else {
                     JOptionPane.showMessageDialog(this, "No se pudo eliminar el registro.");
                 }
@@ -566,6 +592,17 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
             JOptionPane.showMessageDialog(this, "Error al eliminar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnCancelarActionPerformed
+
+    private void btnMostrarTablaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMostrarTablaActionPerformed
+        IntFrmTablaProduccion tabla = new IntFrmTablaProduccion(controlador);
+
+        JDesktopPane desktop = this.getDesktopPane();
+        if (desktop != null) {
+            desktop.add(tabla);
+            tabla.setVisible(true);
+            tabla.toFront();
+        }
+    }//GEN-LAST:event_btnMostrarTablaActionPerformed
 
     private void limpiarFormulario() {
         txtIdCosecha.setText("");
@@ -581,6 +618,7 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
     private javax.swing.JButton btnCancelar;
     private javax.swing.JButton btnEditar;
     private javax.swing.JButton btnLimpiar;
+    private javax.swing.JButton btnMostrarTabla;
     private javax.swing.JButton btnPDF;
     private javax.swing.JButton btnRegistrar;
     private javax.swing.JButton btnXML;
@@ -589,7 +627,6 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
     private javax.swing.JComboBox<String> cmbDestino;
     private com.toedter.calendar.JDateChooser dtcFecha;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel3;
     private javax.swing.JLabel lblCalidadProducto;
     private javax.swing.JLabel lblCantidadRecolectada;
     private javax.swing.JLabel lblCultivoRelacionado;
@@ -600,6 +637,7 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
     private javax.swing.JLabel lblProductividad;
     private javax.swing.JLabel lblReportes;
     private javax.swing.JLabel lblTitulo;
+    private javax.swing.JPanel pnlBotones;
     private javax.swing.JPanel pnlDatos;
     private javax.swing.JPanel pnlGrafica;
     private javax.swing.JPanel pnlInformacion;
