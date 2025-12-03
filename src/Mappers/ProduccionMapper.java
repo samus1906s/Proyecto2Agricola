@@ -17,7 +17,7 @@ public class ProduccionMapper {
     public static Produccion dtoAModelo(ProduccionDTO dto) {
         if (dto == null) return null;
 
-        Produccion p = new Produccion(); // 
+        Produccion p = new Produccion();  
 
         if (dto.getIdProduccion() != null) {
             p.setIdProduccion(dto.getIdProduccion());
