@@ -20,60 +20,56 @@ import java.util.ArrayList;
 public class ProduccionServicio {
     
     private IProduccionDAO dao;
+    private ProduccionMapper mapper;
     
     public ProduccionServicio() {
-        this.dao = new ProduccionDAO(); 
+        this.dao = new ProduccionDAO();
+        this.mapper = new ProduccionMapper();
     }
-
+    
     public boolean registrar(ProduccionDTO dto) throws Exception {
-        Produccion produccion = ProduccionMapper.dtoAModelo(dto);
+        Produccion produccion = mapper.ToEntidad(dto);
         return dao.crear(produccion);
     }
-
+    
     public boolean actualizar(ProduccionDTO dto) throws Exception {
-        Produccion produccion = ProduccionMapper.dtoAModelo(dto);
+        Produccion produccion = mapper.ToEntidad(dto);
         return dao.actualizar(produccion);
     }
-
+    
     public boolean eliminar(int id) throws Exception {
         return dao.eliminar(id);
     }
-
+    
     public List<ProduccionDTO> listar() throws Exception {
         List<Produccion> lista = dao.lista();
         List<ProduccionDTO> resultado = new ArrayList<>();
-
         for (Produccion p : lista) {
-            resultado.add(ProduccionMapper.modeloADto(p));
+            resultado.add(mapper.ToDto(p));
         }
-
         return resultado;
     }
-
+    
     public ProduccionDTO obtenerPorId(int id) throws Exception {
         Produccion p = dao.Leer(id);
-        return ProduccionMapper.modeloADto(p);
+        return mapper.ToDto(p);
     }
-
+    
     public List<ProduccionDTO> buscar(String texto) throws Exception {
         List<Produccion> lista = dao.Buscar(texto);
         List<ProduccionDTO> resultado = new ArrayList<>();
-
         for (Produccion p : lista) {
-            resultado.add(ProduccionMapper.modeloADto(p));
+            resultado.add(mapper.ToDto(p));
         }
-
         return resultado;
     }
     
     public List<ProduccionDTO> listarPorCultivo(int cultivoId) throws Exception {
         List<Produccion> lista = dao.listaDeCultivosId(cultivoId);
         List<ProduccionDTO> salida = new ArrayList<>();
-
         for (Produccion p : lista) {
-            salida.add(ProduccionMapper.modeloADto(p));
+            salida.add(mapper.ToDto(p));
         }
-
         return salida;
     }
     
@@ -81,12 +77,9 @@ public class ProduccionServicio {
         LocalDate f = LocalDate.parse(fecha);
         List<Produccion> lista = dao.listaDeFechas(f);
         List<ProduccionDTO> salida = new ArrayList<>();
-
         for (Produccion p : lista) {
-            salida.add(ProduccionMapper.modeloADto(p));
+            salida.add(mapper.ToDto(p));
         }
-
         return salida;
     }
-
 }
