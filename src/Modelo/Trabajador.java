@@ -13,7 +13,7 @@ public class Trabajador extends Personas{
     private TrabajadorCampo tipo;
     private double salario;
 
-    public Trabajador(Administrador puesto, TrabajadorCampo tipo, double salario, String cedula, String nombre, String telefono, String correo) {
+    public Trabajador(int id, String cedula, String nombre, String telefono, String correo, Administrador puesto, double salario) {
         super(cedula, nombre, telefono, correo);
         this.puesto = puesto;
         this.tipo = tipo;

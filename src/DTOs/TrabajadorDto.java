@@ -21,7 +21,7 @@ public class TrabajadorDto {
     private TrabajadorCampo tipoTrabajador;
     private double salario;
 
-    public TrabajadorDto(int id, String cedula, String nombre, String telefono, String correo, Administrador puesto, TrabajadorCampo tipoTrabajador, double salario) {
+    public TrabajadorDto(String cedula, String nombre, String telefono, String correo, Administrador puesto, double salario, TrabajadorCampo tipoTrabajador, int obtenerNivelCampo) {
         this.id = id;
         this.cedula = cedula;
         this.nombre = nombre;
@@ -31,9 +31,8 @@ public class TrabajadorDto {
         this.tipoTrabajador = tipoTrabajador;
         this.salario = salario;
     }
-    
-     public TrabajadorDto(String cedula, String nombre, String telefono, String correo, Administrador puesto, TrabajadorCampo tipoTrabajador, double salario){
-        this(0, cedula, nombre, telefono, correo, puesto, tipoTrabajador, salario);
+
+    public TrabajadorDto(String cedula1, String correo1, String nombre1, String telefono1) {
     }
 
     public int getId() {

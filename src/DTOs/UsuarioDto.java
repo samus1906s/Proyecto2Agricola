@@ -29,8 +29,7 @@ public class UsuarioDto {
         this.rol = rol;
     }
 
-    public UsuarioDto(String cedula, String nombre, String telefono, String correo, String usuario, String contraseña, String rol){
-        this(0, cedula, nombre, telefono, correo, usuario, contraseña, rol);
+    public UsuarioDto(String user, String contraseña, String cedula, String nombre, String telefono, String correo) {
     }
 
     public int getId() {
@@ -95,6 +94,10 @@ public class UsuarioDto {
 
     public void setRol(String rol) {
         this.rol = rol;
+    }
+
+    public String getUser() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
     
     
