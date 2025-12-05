@@ -10,7 +10,7 @@ import Modelo.Usuario;
 
 /**
  *
- * @author Student
+ * @author Reynold
  */
 public class UsuarioMapper implements iMapper<Usuario, UsuarioDto>{
 

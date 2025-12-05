@@ -6,7 +6,7 @@ package DTOs;
 
 /**
  *
- * @author Student
+ * @author Reynold
  */
 public class UsuarioDto {
     private int id;

@@ -9,7 +9,7 @@ import Modelo.TrabajadorCampo;
 
 /**
  *
- * @author Student
+ * @author Reynold
  */
 public class TrabajadorDto {
     private int id;
@@ -22,7 +22,6 @@ public class TrabajadorDto {
     private double salario;
 
     public TrabajadorDto(String cedula, String nombre, String telefono, String correo, Administrador puesto, double salario, TrabajadorCampo tipoTrabajador, int obtenerNivelCampo) {
-        this.id = id;
         this.cedula = cedula;
         this.nombre = nombre;
         this.telefono = telefono;
