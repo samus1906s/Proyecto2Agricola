@@ -122,30 +122,36 @@ public class CultivoDAO implements ICultivoDAO {
     }
 
     @Override
-    public List<Cultivo> Buscar(String texto) throws Exception {
-        String sql = "SELECT * FROM cultivos WHERE nombre LIKE ? OR tipo LIKE ?";
-        Connection con = ConexionBD.getConnection();
-        PreparedStatement ps = con.prepareStatement(sql);
-        ps.setString(1, "%" + texto + "%");
-        ps.setString(2, "%" + texto + "%");
+public List<Cultivo> Buscar(String texto) throws Exception {
+    
+    
+    String sql = "SELECT * FROM cultivos WHERE nombre LIKE ? OR tipo LIKE ? OR estado LIKE ?";
+    
+    Connection con = ConexionBD.getConnection();
+    PreparedStatement ps = con.prepareStatement(sql);
+    
+    
+    ps.setString(1, texto + "%"); 
+    ps.setString(2, texto + "%"); 
+    ps.setString(3, texto + "%"); 
 
-        ResultSet rs = ps.executeQuery();
-        List<Cultivo> lista = new ArrayList<>();
+    ResultSet rs = ps.executeQuery();
+    List<Cultivo> lista = new ArrayList<>();
 
-        while (rs.next()) {
-            Cultivo c = new Cultivo();
-            c.setIdCultivo(rs.getInt("id_cultivo"));
-            c.setNombre(rs.getString("nombre"));
-            c.setTipo(TiposCultivo.valueOf(rs.getString("tipo")));
-            c.setAreaSembrada(rs.getDouble("area_sembrada"));
-            c.setEstado(EstadoCrecimiento.valueOf(rs.getString("estado")));
-            c.setFechaSiembra(rs.getDate("fecha_siembra").toLocalDate());
-            c.setFechaCosecha(rs.getDate("fecha_cosecha").toLocalDate());
-            lista.add(c);
-        }
-        rs.close();
-        ps.close();
-        return lista;
+    while (rs.next()) {
+        Cultivo c = new Cultivo();
+        c.setIdCultivo(rs.getInt("id_cultivo"));
+        c.setNombre(rs.getString("nombre"));
+        c.setTipo(TiposCultivo.valueOf(rs.getString("tipo"))); 
+        c.setAreaSembrada(rs.getDouble("area_sembrada"));
+        c.setEstado(EstadoCrecimiento.valueOf(rs.getString("estado")));
+        c.setFechaSiembra(rs.getDate("fecha_siembra").toLocalDate());
+        c.setFechaCosecha(rs.getDate("fecha_cosecha").toLocalDate());
+        lista.add(c);
     }
+    rs.close();
+    ps.close();
+    return lista;
+}
     
 }
