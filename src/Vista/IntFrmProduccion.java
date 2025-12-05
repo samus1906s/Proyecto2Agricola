@@ -226,9 +226,6 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
         pnlBotones = new javax.swing.JPanel();
         btnLimpiar = new javax.swing.JButton();
         btnRegistrar = new javax.swing.JButton();
-        btnActualizar = new javax.swing.JButton();
-        btnEditar = new javax.swing.JButton();
-        btnCancelar = new javax.swing.JButton();
         btnMostrarTabla = new javax.swing.JButton();
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -452,34 +449,6 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
         });
         pnlBotones.add(btnRegistrar);
 
-        btnActualizar.setBackground(new java.awt.Color(204, 255, 204));
-        btnActualizar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Refrescar.png"))); // NOI18N
-        btnActualizar.setBorderPainted(false);
-        btnActualizar.setFocusPainted(false);
-        btnActualizar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnActualizarActionPerformed(evt);
-            }
-        });
-        pnlBotones.add(btnActualizar);
-
-        btnEditar.setBackground(new java.awt.Color(204, 255, 204));
-        btnEditar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Editar.png"))); // NOI18N
-        btnEditar.setBorderPainted(false);
-        btnEditar.setFocusPainted(false);
-        pnlBotones.add(btnEditar);
-
-        btnCancelar.setBackground(new java.awt.Color(204, 255, 204));
-        btnCancelar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Cancelar.png"))); // NOI18N
-        btnCancelar.setBorderPainted(false);
-        btnCancelar.setFocusPainted(false);
-        btnCancelar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnCancelarActionPerformed(evt);
-            }
-        });
-        pnlBotones.add(btnCancelar);
-
         btnMostrarTabla.setBackground(new java.awt.Color(204, 255, 204));
         btnMostrarTabla.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Tabla.png"))); // NOI18N
         btnMostrarTabla.addActionListener(new java.awt.event.ActionListener() {
@@ -547,52 +516,6 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
         }
     }//GEN-LAST:event_btnRegistrarActionPerformed
 
-    private void btnActualizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarActionPerformed
-        try {
-           ProduccionDTO dto = obtenerDTODesdeFormulario();
-           if (dto.getIdProduccion() == null) {
-                JOptionPane.showMessageDialog(this, "No hay ID para actualizar.", "Atención", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            boolean ok = controlador.actualizarProduccion(dto);
-            if (ok) {
-                JOptionPane.showMessageDialog(this, "Registro actualizado correctamente.");
-                limpiarFormulario();
-                cargarTabla();
-            } else {
-                JOptionPane.showMessageDialog(this, "No se actualizó el registro.");
-            }
-            } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error al actualizar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }//GEN-LAST:event_btnActualizarActionPerformed
-
-    private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
-        try {
-            String idTxt = txtIdCosecha.getText();
-            if (idTxt == null || idTxt.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "No hay ID para eliminar.", "Atención", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            int id = Integer.parseInt(idTxt.trim());
-            int confirm = JOptionPane.showConfirmDialog(this, "¿Eliminar registro?", "Confirmar", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                boolean ok = controlador.eliminarProduccion(id);
-                if (ok) {
-                    JOptionPane.showMessageDialog(this, "Registro eliminado.");
-                    limpiarFormulario();
-                    cargarTabla();
-                } else {
-                    JOptionPane.showMessageDialog(this, "No se pudo eliminar el registro.");
-                }
-            }
-        } catch (NumberFormatException nf) {
-            JOptionPane.showMessageDialog(this, "ID inválido.", "Error", JOptionPane.ERROR_MESSAGE);
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error al eliminar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }//GEN-LAST:event_btnCancelarActionPerformed
-
     private void btnMostrarTablaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMostrarTablaActionPerformed
         IntFrmTablaProduccion tabla = new IntFrmTablaProduccion(controlador);
 
@@ -614,9 +537,6 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnActualizar;
-    private javax.swing.JButton btnCancelar;
-    private javax.swing.JButton btnEditar;
     private javax.swing.JButton btnLimpiar;
     private javax.swing.JButton btnMostrarTabla;
     private javax.swing.JButton btnPDF;
