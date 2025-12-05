@@ -34,7 +34,7 @@ public class ProduccionMapper implements iMapper<Produccion, ProduccionDTO> {
         if (dto == null) return null;
         
         Produccion p = new Produccion();
-        
+
         if (dto.getIdProduccion() != null) {
             p.setIdProduccion(dto.getIdProduccion());
         }
