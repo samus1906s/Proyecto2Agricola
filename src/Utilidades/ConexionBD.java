@@ -7,38 +7,44 @@ package Utilidades;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+
 /**
  *
  * @author je110
  */
 public class ConexionBD {
-    private static final String URL = "jdbc:mariadb://localhost:3307/produccion_agricola";
+
+    private static final String URL = "jdbc:mysql://localhost:3307/produccion_agricola?useSSL=false&serverTimezone=UTC";
+    
     private static final String USUARIO = "admin";
     private static final String CONTRASENA = "admin123";
     private static Connection conexion = null;
 
     public static Connection getConnection() throws SQLException {
+
         if (conexion != null && !conexion.isClosed()) {
             return conexion;
         }
 
         try {
-            Class.forName("org.mariadb.jdbc.Driver");
-
+            Class.forName("com.mysql.cj.jdbc.Driver");
             conexion = DriverManager.getConnection(URL, USUARIO, CONTRASENA);
-            System.out.println("✔ Conexión a MariaDB establecida correctamente.");
+
+            System.out.println("Conexion a la BD establecida correctamente.");
             return conexion;
+
         } catch (ClassNotFoundException e) {
-            throw new SQLException("❌ Error: No se encontró el driver de MariaDB.", e);
+            throw new SQLException("No se encontró el driver MySQL.", e);
         } catch (SQLException e) {
-            throw new SQLException("❌ Error al conectar a la base de datos: " + e.getMessage(), e);
+            throw new SQLException("Error al conectar: " + e.getMessage(), e);
         }
     }
-    
-     public static void cerrar() throws SQLException {
+
+    public static void cerrar() throws SQLException {
         if (conexion != null && !conexion.isClosed()) {
             conexion.close();
-            System.out.println("✔ Conexión cerrada.");
+            System.out.println("Conexion cerrada.");
         }
     }
 }
+
