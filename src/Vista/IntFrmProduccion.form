@@ -226,49 +226,72 @@
           <SubComponents>
             <Component class="javax.swing.JLabel" name="lblIdcosecha">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Bell MT" size="14" style="1"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="ID Cosecha:"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JLabel" name="lblCantidadRecolectada">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Bell MT" size="14" style="1"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="Cantidad Recolectada:"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JLabel" name="lblFecha">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Bell MT" size="14" style="1"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="Fecha:"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JLabel" name="lblCalidadProducto">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Bell MT" size="14" style="1"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="Calidad de Producto:"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JLabel" name="lblDestino">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Bell MT" size="14" style="1"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="Destino:"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JTextField" name="txtIdCosecha">
+              <Properties>
+                <Property name="editable" type="boolean" value="false"/>
+                <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                  <Color blue="cc" green="cc" red="cc" type="rgb"/>
+                </Property>
+                <Property name="horizontalAlignment" type="int" value="0"/>
+              </Properties>
             </Component>
             <Component class="com.toedter.calendar.JDateChooser" name="dtcFecha">
+              <Properties>
+                <Property name="dateFormatString" type="java.lang.String" value="dd/MM/yyyy"/>
+              </Properties>
             </Component>
             <Component class="javax.swing.JTextField" name="txtCantidadRecolectada">
             </Component>
             <Component class="javax.swing.JLabel" name="lblCultivoRelacionado">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Bell MT" size="14" style="1"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="Cultivo Relacionado:"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JComboBox" name="cmbCalidadProducto">
               <Properties>
                 <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                  <StringArray count="4">
-                    <StringItem index="0" value="Item 1"/>
-                    <StringItem index="1" value="Item 2"/>
-                    <StringItem index="2" value="Item 3"/>
-                    <StringItem index="3" value="Item 4"/>
-                  </StringArray>
+                  <StringArray count="0"/>
                 </Property>
               </Properties>
               <AuxValues>
@@ -278,12 +301,7 @@
             <Component class="javax.swing.JComboBox" name="cmbDestino">
               <Properties>
                 <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                  <StringArray count="4">
-                    <StringItem index="0" value="Item 1"/>
-                    <StringItem index="1" value="Item 2"/>
-                    <StringItem index="2" value="Item 3"/>
-                    <StringItem index="3" value="Item 4"/>
-                  </StringArray>
+                  <StringArray count="0"/>
                 </Property>
               </Properties>
               <AuxValues>
@@ -293,12 +311,7 @@
             <Component class="javax.swing.JComboBox" name="cmbCultivoRelacionado">
               <Properties>
                 <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                  <StringArray count="4">
-                    <StringItem index="0" value="Item 1"/>
-                    <StringItem index="1" value="Item 2"/>
-                    <StringItem index="2" value="Item 3"/>
-                    <StringItem index="3" value="Item 4"/>
-                  </StringArray>
+                  <StringArray count="0"/>
                 </Property>
               </Properties>
               <AuxValues>
@@ -331,7 +344,7 @@
                                   <Component id="lblReportes" min="-2" max="-2" attributes="0"/>
                                   <Group type="102" alignment="0" attributes="0">
                                       <Component id="btnPDF" min="-2" pref="140" max="-2" attributes="0"/>
-                                      <EmptySpace pref="34" max="32767" attributes="0"/>
+                                      <EmptySpace pref="11" max="32767" attributes="0"/>
                                       <Component id="btnXML" min="-2" pref="140" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
@@ -379,11 +392,17 @@
             </Component>
             <Component class="javax.swing.JLabel" name="lblProductividad">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Bell MT" size="14" style="1"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="Productividad"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JLabel" name="lblReportes">
               <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Bell MT" size="14" style="1"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="Generaci&#xf3;n de Reportes"/>
               </Properties>
             </Component>
@@ -420,18 +439,30 @@
                 <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
                   <Color blue="3f" green="5f" red="2d" type="rgb"/>
                 </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Bell MT" size="14" style="1"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value=" Generar PDF"/>
                 <Property name="focusPainted" type="boolean" value="false"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnPDFActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JButton" name="btnXML">
               <Properties>
                 <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
                   <Color blue="3f" green="5f" red="2d" type="rgb"/>
                 </Property>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Bell MT" size="14" style="1"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="Generar XML"/>
                 <Property name="focusPainted" type="boolean" value="false"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnXMLActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>
@@ -458,6 +489,9 @@
                 <Property name="borderPainted" type="boolean" value="false"/>
                 <Property name="focusPainted" type="boolean" value="false"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnLimpiarActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JButton" name="btnRegistrar">
               <Properties>

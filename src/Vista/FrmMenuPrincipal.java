@@ -63,7 +63,7 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         mnCultivos = new javax.swing.JMenuItem();
         mnTrabajadores = new javax.swing.JMenuItem();
         mnProduccion = new javax.swing.JMenuItem();
-        jMenuItem3 = new javax.swing.JMenuItem();
+        mnAlmacen = new javax.swing.JMenuItem();
         mnUsuarios = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -114,8 +114,8 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         });
         mnSistemaProducciónAgricola.add(mnProduccion);
 
-        jMenuItem3.setText("jMenuItem3");
-        mnSistemaProducciónAgricola.add(jMenuItem3);
+        mnAlmacen.setText("Almacen");
+        mnSistemaProducciónAgricola.add(mnAlmacen);
 
         mnUsuarios.setText("Usuarios");
         mnUsuarios.addActionListener(new java.awt.event.ActionListener() {
@@ -144,7 +144,9 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void mnCultivosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnCultivosActionPerformed
-        
+        IntFrmCultivos internalFrameCultivo = new IntFrmCultivos();
+        DesktopPane.add(internalFrameCultivo);
+        internalFrameCultivo.setVisible(true);
     }//GEN-LAST:event_mnCultivosActionPerformed
 
     private void DesktopPaneComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_DesktopPaneComponentResized
@@ -190,8 +192,8 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JDesktopPane DesktopPane;
-    private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JLabel lblFondo;
+    private javax.swing.JMenuItem mnAlmacen;
     private javax.swing.JMenuItem mnCultivos;
     private javax.swing.JMenuItem mnProduccion;
     private javax.swing.JMenu mnSistemaProducciónAgricola;

@@ -5,7 +5,20 @@
 package Vista;
 
 import Controlador.ControladorProduccion;
-
+import Controlador.ControladorCultivo;
+import DTOs.ProduccionDTO;
+import DTOs.DTOCultivo;
+import java.awt.Color;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import javax.swing.JComponent;
+import javax.swing.JOptionPane;
+import javax.swing.RowFilter;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 /**
  *
  * @author je110
@@ -13,30 +26,154 @@ import Controlador.ControladorProduccion;
 public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
 
     private ControladorProduccion controlador;
+    private ControladorCultivo controladorCultivo;
+    private TableRowSorter<DefaultTableModel> sorter;
+    private DefaultTableModel modelo;
     /**
      * Creates new form IntFrmTablaProduccion
      */
-    public IntFrmTablaProduccion(ControladorProduccion controlador) {
+    public IntFrmTablaProduccion(ControladorProduccion controlador, ControladorCultivo controladorCultivo) {
         this.controlador = controlador;
+        this.controladorCultivo = controladorCultivo;
         initComponents();
+        configurarTabla();
+        cargarCombos();
+        cargarDatosTabla();
         personalizarTabla();
         personalizarTituloYBorde();
+    }
+    
+    private void configurarTabla() {
+        modelo = (DefaultTableModel) tblProduccion.getModel();
+        sorter = new TableRowSorter<>(modelo);
+        tblProduccion.setRowSorter(sorter);
+    }
+    
+    private void cargarCombos() {
+        try {
+
+            cmbCultivo.removeAllItems();
+            cmbCultivo.addItem("Todos");
+            
+            List<DTOCultivo> cultivos = controladorCultivo.listarCultivos();
+            if (cultivos != null) {
+                for (DTOCultivo cultivo : cultivos) {
+                    cmbCultivo.addItem(cultivo.getNombre());
+                }
+            }
+
+            cmbDestino.removeAllItems();
+            cmbDestino.addItem("Todos");
+            cmbDestino.addItem("Venta");
+            cmbDestino.addItem("Almacenamiento");
+            cmbDestino.addItem("Procesamiento");
+            cmbDestino.addItem("Exportación");
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar filtros: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void cargarDatosTabla() {
+        try {
+            modelo.setRowCount(0);
+            
+            List<ProduccionDTO> producciones = controlador.listarProducciones();
+            
+            if (producciones != null && !producciones.isEmpty()) {
+                for (ProduccionDTO p : producciones) {
+                    Object[] fila = new Object[6];
+                    fila[0] = p.getIdProduccion();
+                    fila[1] = obtenerNombreCultivo(p.getCultivoId());
+                    fila[2] = p.getFecha().toString();
+                    fila[3] = p.getCantidadRecolectada() + " kg";
+                    fila[4] = p.getCalidadProducto();
+                    fila[5] = p.getDestino();
+                    
+                    modelo.addRow(fila);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "No hay producciones registradas", "Información", JOptionPane.INFORMATION_MESSAGE);
+            }
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar datos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+    
+    private String obtenerNombreCultivo(Integer cultivoId) {
+        try {
+            if (cultivoId == null) return "Desconocido";
+            
+            DTOCultivo cultivo = controladorCultivo.obtenerCultivo(cultivoId);
+            return cultivo != null ? cultivo.getNombre() : "Cultivo #" + cultivoId;
+            
+        } catch (Exception e) {
+            return "Error";
+        }
+    }
+    
+    private void filtrarTabla() {
+        try {
+        
+            if (cmbCultivo.getSelectedItem() == null || cmbDestino.getSelectedItem() == null) {
+                return; 
+            }
+        
+           String cultivo = cmbCultivo.getSelectedItem().toString();
+           String destino = cmbDestino.getSelectedItem().toString();
+           Date fecha = dtcFecha.getDate();
+           String busqueda = txtBuscar.getText().trim();
+        
+           List<RowFilter<DefaultTableModel, Object>> filtros = new ArrayList<>();
+        
+            if (!busqueda.isEmpty()) {
+                filtros.add(RowFilter.regexFilter("(?i)" + busqueda));
+            }
+        
+            if (!cultivo.equals("Todos")) {
+                filtros.add(RowFilter.regexFilter(cultivo, 1));
+            }
+        
+            if (!destino.equals("Todos")) {
+                filtros.add(RowFilter.regexFilter(destino, 5));
+            }
+        
+            if (fecha != null) {
+                LocalDate fechaSeleccionada = fecha.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                filtros.add(RowFilter.regexFilter(fechaSeleccionada.toString(), 2));
+            }
+        
+            if (!filtros.isEmpty()) {
+                RowFilter<DefaultTableModel, Object> filtroCompuesto = RowFilter.andFilter(filtros);
+                sorter.setRowFilter(filtroCompuesto);
+            } else {
+                sorter.setRowFilter(null);
+            }
+        
+            } catch (Exception e) {
+        
+            if (e.getMessage() != null && !e.getMessage().contains("null")) {
+                JOptionPane.showMessageDialog(this, "Error al filtrar: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
     
     private void personalizarTituloYBorde() {
         try {
             javax.swing.plaf.basic.BasicInternalFrameUI ui = (javax.swing.plaf.basic.BasicInternalFrameUI) this.getUI();
 
-            java.awt.Color verdeTitulo = new java.awt.Color(232, 245, 233);
-            javax.swing.JComponent titleBar = ui.getNorthPane();
+            Color verdeTitulo = new java.awt.Color(232, 245, 233);
+            JComponent titleBar = ui.getNorthPane();
             titleBar.setBackground(verdeTitulo);
             titleBar.setOpaque(true);
 
-            this.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 255, 204), 4));
+            this.setBorder(javax.swing.BorderFactory.createLineBorder(new Color(204, 255, 204), 4));
 
             java.beans.PropertyChangeListener listener = evt -> {
                 if ("frameType".equals(evt.getPropertyName())) {
-                    this.setForeground(java.awt.Color.WHITE);
+                    this.setForeground(Color.WHITE);
                 }
             };
             this.addPropertyChangeListener(listener);
@@ -151,10 +288,10 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
         lblDestino = new javax.swing.JLabel();
         cmbDestino = new javax.swing.JComboBox<>();
         pnlBotones = new javax.swing.JPanel();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
+        btnEditar = new javax.swing.JButton();
+        btnActualizar = new javax.swing.JButton();
+        btnEliminar = new javax.swing.JButton();
+        btnCancelar = new javax.swing.JButton();
         scpTabla = new javax.swing.JScrollPane();
         tblProduccion = new javax.swing.JTable();
 
@@ -198,6 +335,11 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
 
         txtBuscar.setBackground(new java.awt.Color(204, 255, 204));
         txtBuscar.setHorizontalAlignment(javax.swing.JTextField.LEFT);
+        txtBuscar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtBuscarActionPerformed(evt);
+            }
+        });
         pnlBarraBusqueda.add(txtBuscar, java.awt.BorderLayout.CENTER);
 
         pnlFiltros.setBackground(new java.awt.Color(204, 255, 204));
@@ -212,6 +354,11 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
         lblFecha.setText("Fecha:");
 
         dtcFecha.setDateFormatString("dd/MM/yyyy");
+        dtcFecha.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                dtcFechaPropertyChange(evt);
+            }
+        });
 
         lblCultivo.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
         lblCultivo.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -219,6 +366,11 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
 
         cmbCultivo.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
         cmbCultivo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbCultivo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbCultivoActionPerformed(evt);
+            }
+        });
 
         lblDestino.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
         lblDestino.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -226,6 +378,11 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
 
         cmbDestino.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
         cmbDestino.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbDestino.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbDestinoActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout pnlFiltrosLayout = new javax.swing.GroupLayout(pnlFiltros);
         pnlFiltros.setLayout(pnlFiltrosLayout);
@@ -275,21 +432,41 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
         pnlBotones.setBackground(new java.awt.Color(45, 95, 63));
         pnlBotones.setLayout(new java.awt.GridLayout(1, 4));
 
-        jButton1.setBackground(new java.awt.Color(204, 255, 204));
-        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Editar.png"))); // NOI18N
-        pnlBotones.add(jButton1);
+        btnEditar.setBackground(new java.awt.Color(204, 255, 204));
+        btnEditar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Editar.png"))); // NOI18N
+        btnEditar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEditarActionPerformed(evt);
+            }
+        });
+        pnlBotones.add(btnEditar);
 
-        jButton2.setBackground(new java.awt.Color(204, 255, 204));
-        jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Refrescar.png"))); // NOI18N
-        pnlBotones.add(jButton2);
+        btnActualizar.setBackground(new java.awt.Color(204, 255, 204));
+        btnActualizar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Refrescar.png"))); // NOI18N
+        btnActualizar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnActualizarActionPerformed(evt);
+            }
+        });
+        pnlBotones.add(btnActualizar);
 
-        jButton3.setBackground(new java.awt.Color(204, 255, 204));
-        jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Eliminar.png"))); // NOI18N
-        pnlBotones.add(jButton3);
+        btnEliminar.setBackground(new java.awt.Color(204, 255, 204));
+        btnEliminar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Eliminar.png"))); // NOI18N
+        btnEliminar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEliminarActionPerformed(evt);
+            }
+        });
+        pnlBotones.add(btnEliminar);
 
-        jButton4.setBackground(new java.awt.Color(204, 255, 204));
-        jButton4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Cancelar.png"))); // NOI18N
-        pnlBotones.add(jButton4);
+        btnCancelar.setBackground(new java.awt.Color(204, 255, 204));
+        btnCancelar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Cancelar.png"))); // NOI18N
+        btnCancelar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCancelarActionPerformed(evt);
+            }
+        });
+        pnlBotones.add(btnCancelar);
 
         tblProduccion.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
         tblProduccion.setForeground(new java.awt.Color(0, 0, 0));
@@ -365,15 +542,112 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditarActionPerformed
+        int filaSeleccionada = tblProduccion.getSelectedRow();
+        
+        if (filaSeleccionada == -1) {
+            JOptionPane.showMessageDialog(this, "Debe seleccionar una fila para editar", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        try {
+            int filaModelo = tblProduccion.convertRowIndexToModel(filaSeleccionada);
+            int id = (int) modelo.getValueAt(filaModelo, 0);
+            
+            ProduccionDTO dto = controlador.obtenerProduccion(id);
+            
+            IntFrmProduccion frmEdicion = new IntFrmProduccion(controlador);
+            frmEdicion.cargarDatos(dto);
+            
+            javax.swing.JDesktopPane desktop = this.getDesktopPane();
+            if (desktop != null) {
+                desktop.add(frmEdicion);
+                frmEdicion.setVisible(true);
+                frmEdicion.toFront();
+            }
+            
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al editar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_btnEditarActionPerformed
+
+    private void btnActualizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarActionPerformed
+        cargarDatosTabla();
+        
+        txtBuscar.setText("");
+        cmbCultivo.setSelectedIndex(0);
+        cmbDestino.setSelectedIndex(0);
+        dtcFecha.setDate(null);
+        sorter.setRowFilter(null);
+        
+        JOptionPane.showMessageDialog(this, "Tabla actualizada correctamente", "Información", JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_btnActualizarActionPerformed
+
+    private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
+        int filaSeleccionada = tblProduccion.getSelectedRow();
+        
+        if (filaSeleccionada == -1) {
+            JOptionPane.showMessageDialog(this, "Debe seleccionar una fila para eliminar", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        try {
+            int filaModelo = tblProduccion.convertRowIndexToModel(filaSeleccionada);
+            int id = (int) modelo.getValueAt(filaModelo, 0);
+            
+            int confirmacion = JOptionPane.showConfirmDialog(this, "¿Está seguro de eliminar la producción con ID: " + id + "?\n" +"Esta acción no se puede deshacer.", "Confirmar eliminación", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            
+            if (confirmacion == JOptionPane.YES_OPTION) {
+                boolean exito = controlador.eliminarProduccion(id);
+                
+                if (exito) {
+                    JOptionPane.showMessageDialog(this, "Registro eliminado correctamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    cargarDatosTabla();
+                } else {
+                    JOptionPane.showMessageDialog(this, "No se pudo eliminar el registro", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al eliminar: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_btnEliminarActionPerformed
+
+    private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
+        int confirmacion = JOptionPane.showConfirmDialog(this, "¿Desea cerrar la ventana de gestión de producciones?", "Confirmar cierre", JOptionPane.YES_NO_OPTION);
+        
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            this.dispose();
+        }
+    }//GEN-LAST:event_btnCancelarActionPerformed
+
+    private void txtBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtBuscarActionPerformed
+        filtrarTabla();
+    }//GEN-LAST:event_txtBuscarActionPerformed
+
+    private void cmbCultivoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbCultivoActionPerformed
+        filtrarTabla();
+    }//GEN-LAST:event_cmbCultivoActionPerformed
+
+    private void cmbDestinoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbDestinoActionPerformed
+        filtrarTabla();
+    }//GEN-LAST:event_cmbDestinoActionPerformed
+
+    private void dtcFechaPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_dtcFechaPropertyChange
+        if ("date".equals(evt.getPropertyName())) {
+            filtrarTabla();
+        }
+    }//GEN-LAST:event_dtcFechaPropertyChange
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnActualizar;
+    private javax.swing.JButton btnCancelar;
+    private javax.swing.JButton btnEditar;
+    private javax.swing.JButton btnEliminar;
     private javax.swing.JComboBox<String> cmbCultivo;
     private javax.swing.JComboBox<String> cmbDestino;
     private com.toedter.calendar.JDateChooser dtcFecha;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
     private javax.swing.JLabel lblCultivo;
     private javax.swing.JLabel lblDestino;
     private javax.swing.JLabel lblFecha;
