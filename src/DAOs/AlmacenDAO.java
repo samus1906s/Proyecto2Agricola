@@ -9,6 +9,7 @@ import Modelo.Almacen;
 import Modelo.EstadoAlmacen;
 import Utilidades.ConexionBD;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -215,6 +216,44 @@ public class AlmacenDAO implements IAlmacenDAO{
         return lista;
     }
     
+    public List<Almacen> listaPorFechaIngreso(LocalDate fecha) throws SQLException {
+    List<Almacen> lista = new ArrayList<>();
+
+    try {
+        String sql = "SELECT * FROM almacen WHERE fechaIngreso = ?";
+
+        Connection con = ConexionBD.getConnection();
+        PreparedStatement ps = con.prepareStatement(sql);
+
+        ps.setDate(1, Date.valueOf(fecha));
+
+        ResultSet rs = ps.executeQuery();
+
+        while (rs.next()) {
+
+            Almacen a = new Almacen();
+            a.setId(rs.getInt("id"));
+            a.setProduccionId(rs.getInt("produccionId"));
+            a.setCantidadDisponible(rs.getDouble("cantidadDisponible"));
+            a.setFechaIngreso(rs.getDate("fechaIngreso").toLocalDate());
+
+            Date egreso = rs.getDate("fechaEgreso");
+            a.setFechaEgreso(egreso != null ? egreso.toLocalDate() : null);
+
+            a.setEstado(EstadoAlmacen.valueOf(rs.getString("estado")));
+
+            lista.add(a);
+        }
+
+        rs.close();
+        ps.close();
+
+    } catch (SQLException ex) {
+        System.out.println("Error en listaPorFechaIngreso(): " + ex);
+    }
+
+    return lista;
+}
 }
     
     
