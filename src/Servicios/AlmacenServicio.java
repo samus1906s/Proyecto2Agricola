@@ -19,7 +19,7 @@ public class AlmacenServicio {
     private AlmacenDAO dao;
     private AlmacenMapper mapper;
 
-    public AlmacenServicio(AlmacenDAO dao, AlmacenMapper mapper) {
+    public AlmacenServicio() {
         this.dao = new AlmacenDAO();
         this.mapper = new AlmacenMapper();
     }
