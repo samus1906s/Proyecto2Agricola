@@ -5,21 +5,22 @@
 package Interfaces;
 import Modelo.Almacen;
 import java.util.List;
+import java.sql.SQLException;
 
 /**
  *
  * @author samue
  */
 public interface IAlmacenDAO {
-  public boolean crear(Almacen a) throws Exception;
+  public boolean crear(Almacen a) throws SQLException;
 
-    public Almacen Leer(int id) throws Exception;
+    public Almacen Leer(int id) throws SQLException;
 
-    public List<Almacen> lista() throws Exception;
+    public List<Almacen> lista() throws SQLException;
 
-    public boolean actualizar(Almacen a) throws Exception;
+    public boolean actualizar(Almacen a) throws SQLException;
 
-    public boolean eliminar(int id) throws Exception;
+    public boolean eliminar(int id) throws SQLException;
 
-    public List<Almacen> Buscar(String texto) throws Exception;  
+    public List<Almacen> Buscar(String texto) throws SQLException;  
 }
