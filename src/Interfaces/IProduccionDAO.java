@@ -7,25 +7,26 @@ package Interfaces;
 import Modelo.Produccion;
 import java.time.LocalDate;
 import java.util.List;
+import java.sql.SQLException;
 /**
  *
  * @author je110
  */
 public interface IProduccionDAO {
     
-    boolean crear(Produccion p) throws Exception;
+    boolean crear(Produccion p) throws SQLException;
 
-    Produccion Leer(int id) throws Exception;
+    Produccion Leer(int id) throws SQLException;
 
-    List<Produccion> lista() throws Exception;
+    List<Produccion> lista() throws SQLException;
 
-    boolean actualizar(Produccion p) throws Exception;
+    boolean actualizar(Produccion p) throws SQLException;
 
-    boolean eliminar(int id) throws Exception;
+    boolean eliminar(int id) throws SQLException;
 
-    List<Produccion> listaDeCultivosId(int cultivoId) throws Exception;
+    List<Produccion> listaDeCultivosId(int cultivoId) throws SQLException;
 
-    List<Produccion> listaDeFechas(LocalDate fecha) throws Exception;
+    List<Produccion> listaDeFechas(LocalDate fecha) throws SQLException;
 
-    List<Produccion> Buscar(String texto) throws Exception;
+    List<Produccion> Buscar(String texto) throws SQLException;
 }
