@@ -21,8 +21,12 @@ public class ControladorProduccion {
         this.servicio = new ProduccionServicio();
     }
 
-    public boolean registrarProduccion(ProduccionDTO dto) throws Exception {
-        return servicio.registrar(dto);
+    public int registrarProduccion(ProduccionDTO dto) throws Exception {
+        return servicio.registrarYRetornarId(dto);
+    }
+    
+    public ProduccionDTO obtenerUltimaProduccion() throws Exception {
+        return servicio.obtenerUltima();
     }
 
     public boolean actualizarProduccion(ProduccionDTO dto) throws Exception {

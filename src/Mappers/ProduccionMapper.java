@@ -49,8 +49,8 @@ public class ProduccionMapper implements iMapper<Produccion, ProduccionDTO> {
     
     public static Produccion resultadoSetDelModelo(ResultSet rs) throws SQLException {
         Produccion p = new Produccion();
-        p.setIdProduccion(rs.getInt("idProduccion"));
-        p.setIdCultivo(rs.getInt("idCultivo"));
+        p.setIdProduccion(rs.getInt("id"));
+        p.setIdCultivo(rs.getInt("cultivo_id"));
         p.setFecha(rs.getDate("fecha").toLocalDate());
         p.setCantidadRecolectada(rs.getBigDecimal("cantidad_recolectada"));
         p.setCalidadProducto(rs.getString("calidad_producto"));

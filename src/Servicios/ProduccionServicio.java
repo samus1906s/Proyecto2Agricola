@@ -4,7 +4,6 @@
  */
 package Servicios;
 
-import Interfaces.IProduccionDAO;
 import DAOs.ProduccionDAO;
 import DTOs.ProduccionDTO;
 import Modelo.Produccion;
@@ -12,6 +11,7 @@ import Mappers.ProduccionMapper;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.ArrayList;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -19,7 +19,7 @@ import java.util.ArrayList;
  */
 public class ProduccionServicio {
     
-    private IProduccionDAO dao;
+    private ProduccionDAO dao; 
     private ProduccionMapper mapper;
     
     public ProduccionServicio() {
@@ -27,11 +27,75 @@ public class ProduccionServicio {
         this.mapper = new ProduccionMapper();
     }
     
-    public boolean registrar(ProduccionDTO dto) throws Exception {
+   public boolean registrar(ProduccionDTO dto) throws Exception {
+
+        boolean existeDuplicado = dao.existeProduccionDuplicada(
+            dto.getCultivoId(), 
+            dto.getFecha(), 
+            dto.getCantidadRecolectada()
+        );
+        
+        if (existeDuplicado) {
+
+            int respuesta = JOptionPane.showConfirmDialog(
+                null,
+                "Ya existe un registro con el mismo cultivo, fecha y cantidad.\n" +
+                "¿Desea registrarlo de todas formas?",
+                "Posible duplicado",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+            );
+
+            if (respuesta != JOptionPane.YES_OPTION) {
+                return false;
+            }
+        }
+
         Produccion produccion = mapper.ToEntidad(dto);
         return dao.crear(produccion);
     }
-    
+ 
+    public int registrarYRetornarId(ProduccionDTO dto) throws Exception {
+
+        boolean existeDuplicado = dao.existeProduccionDuplicada(
+            dto.getCultivoId(), 
+            dto.getFecha(), 
+            dto.getCantidadRecolectada()
+        );
+        
+        if (existeDuplicado) {
+            int respuesta = JOptionPane.showConfirmDialog(
+                null,
+                "Ya existe un registro con el mismo cultivo, fecha y cantidad.\n" +
+                "¿Desea registrarlo de todas formas?",
+                "Posible duplicado",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+            );
+            
+            if (respuesta != JOptionPane.YES_OPTION) {
+                return -1; 
+            }
+        }
+
+        Produccion produccion = mapper.ToEntidad(dto);
+        int idGenerado = dao.crearYRetornarId(produccion);
+
+        if (idGenerado > 0) {
+            dto.setIdProduccion(idGenerado);
+        }
+        
+        return idGenerado;
+    }
+
+    public ProduccionDTO obtenerUltima() throws Exception {
+        Produccion p = dao.obtenerUltima();
+        if (p != null) {
+            return mapper.ToDto(p);
+        }
+        return null;
+    }
+
     public boolean actualizar(ProduccionDTO dto) throws Exception {
         Produccion produccion = mapper.ToEntidad(dto);
         return dao.actualizar(produccion);
