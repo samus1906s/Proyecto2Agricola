@@ -172,7 +172,7 @@ public class ProduccionDAO implements IProduccionDAO {
         List<Produccion> lista = new ArrayList<>();
         
         try {
-            String sql = "SELECT * FROM produccion ORDER BY fecha DESC";
+            String sql = "SELECT * FROM produccion ORDER BY id DESC";
 
             Connection con = ConexionBD.getConnection();
             Statement st = con.createStatement();
