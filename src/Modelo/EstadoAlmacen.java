@@ -14,6 +14,6 @@ public enum EstadoAlmacen {
     EN_BUEN_ESTADO,
     PROXIMO_A_VENCER,
     VENCIDO,
-    DAÑADO;
+    DANADO;
 
 }

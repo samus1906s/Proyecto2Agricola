@@ -181,7 +181,7 @@ public class AlmacenDAO implements IAlmacenDAO{
         List<Almacen> lista = new ArrayList<>();
 
         try {
-            String sql = "SELECT id,produccionId,cantidadDisponible, fechaIngreso, fechaEgreso, estado FROM Clientes WHERE id=?";
+            String sql = "SELECT id,produccionId,cantidadDisponible, fechaIngreso, fechaEgreso, estado FROM almacen WHERE id=?";
 
             Connection con = ConexionBD.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
