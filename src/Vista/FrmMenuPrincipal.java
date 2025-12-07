@@ -94,6 +94,11 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         );
 
         mnSistemaProducciónAgricola.setText("Sistema de Producción Agricola");
+        mnSistemaProducciónAgricola.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnSistemaProducciónAgricolaActionPerformed(evt);
+            }
+        });
 
         mnCultivos.setText("Cultivos");
         mnCultivos.addActionListener(new java.awt.event.ActionListener() {
@@ -115,6 +120,11 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         mnSistemaProducciónAgricola.add(mnProduccion);
 
         mnAlmacen.setText("Almacen");
+        mnAlmacen.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnAlmacenActionPerformed(evt);
+            }
+        });
         mnSistemaProducciónAgricola.add(mnAlmacen);
 
         mnUsuarios.setText("Usuarios");
@@ -164,6 +174,16 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         DesktopPane.add(internalFrameUsuario);
         internalFrameUsuario.setVisible(true);
     }//GEN-LAST:event_mnUsuariosActionPerformed
+
+    private void mnSistemaProducciónAgricolaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnSistemaProducciónAgricolaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_mnSistemaProducciónAgricolaActionPerformed
+
+    private void mnAlmacenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnAlmacenActionPerformed
+        IntFrmAlmacen internalFrameAlmacen = new IntFrmAlmacen();
+        DesktopPane.add(internalFrameAlmacen);
+        internalFrameAlmacen.setVisible(true);
+    }//GEN-LAST:event_mnAlmacenActionPerformed
 
     /**
      * @param args the command line arguments
