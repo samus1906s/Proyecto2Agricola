@@ -9,15 +9,21 @@ package Modelo;
  * @author Reynold
  */
 public class Usuario extends Personas{
+    private int id;
     private String user;
     private String contraseña;
 
-    public Usuario(String user, String contraseña, String cedula, String nombre, String telefono, String correo) {
+    public Usuario(int id, String user, String contraseña, String cedula, String nombre, String telefono, String correo) {
         super(cedula, nombre, telefono, correo);
+        this.id = id;
         this.user = user;
         this.contraseña = contraseña;
     }
 
+    public int getId() {
+        return id;
+    }
+    
     public String getUser() {
         return user;
     }
