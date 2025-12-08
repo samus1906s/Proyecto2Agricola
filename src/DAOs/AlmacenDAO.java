@@ -177,43 +177,47 @@ public class AlmacenDAO implements IAlmacenDAO{
 
     @Override
     public List<Almacen> Buscar(String texto) throws SQLException {
- 
+        
         List<Almacen> lista = new ArrayList<>();
 
-        try {
-            String sql = "SELECT id,produccionId,cantidadDisponible, fechaIngreso, fechaEgreso, estado FROM almacen WHERE id=?";
+    try {
+        // Validar que texto sea número
+        int id = Integer.parseInt(texto);
 
-            Connection con = ConexionBD.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql);
+        String sql = "SELECT id, produccionId, cantidadDisponible, fechaIngreso, fechaEgreso, estado "
+                   + "FROM almacen WHERE id = ?";
 
-            ps.setString(1, texto + "%");
-            ps.setString(2, texto + "%");
+        Connection con = ConexionBD.getConnection();
+        PreparedStatement ps = con.prepareStatement(sql);
 
-            ResultSet rs = ps.executeQuery();
+        ps.setInt(1, id);
 
-            while (rs.next()) {
-                Almacen a = new Almacen();
-                a.setId(rs.getInt("id"));
-                a.setProduccionId(rs.getInt("produccionId"));
-                a.setCantidadDisponible(rs.getDouble("cantidadDisponible"));
-                a.setFechaIngreso(rs.getDate("fechaIngreso").toLocalDate());
+        ResultSet rs = ps.executeQuery();
 
-                Date egreso = rs.getDate("fechaEgreso");
-                a.setFechaEgreso(egreso != null ? egreso.toLocalDate() : null);
+        while (rs.next()) {
 
-                a.setEstado(EstadoAlmacen.valueOf(rs.getString("estado")));
+            Almacen a = new Almacen();
+            a.setId(rs.getInt("id"));
+            a.setProduccionId(rs.getInt("produccionId"));
+            a.setCantidadDisponible(rs.getDouble("cantidadDisponible"));
+            a.setFechaIngreso(rs.getDate("fechaIngreso").toLocalDate());
 
-                lista.add(a);
-            }
+            Date egreso = rs.getDate("fechaEgreso");
+            a.setFechaEgreso(egreso != null ? egreso.toLocalDate() : null);
 
-            rs.close();
-            ps.close();
+            a.setEstado(EstadoAlmacen.valueOf(rs.getString("estado")));
 
-        } catch (SQLException ex) {
-            System.out.println("Error en Buscar(): " + ex);
+            lista.add(a);
         }
 
-        return lista;
+        rs.close();
+        ps.close();
+
+    } catch (NumberFormatException ex) {
+        System.out.println("ID inválido: " + texto);
+    }
+
+    return lista;
     }
     
     public List<Almacen> listaPorFechaIngreso(LocalDate fecha) throws SQLException {
@@ -254,6 +258,8 @@ public class AlmacenDAO implements IAlmacenDAO{
 
     return lista;
 }
+    
+
 }
     
     

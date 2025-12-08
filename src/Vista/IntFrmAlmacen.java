@@ -5,18 +5,18 @@
 package Vista;
 
 import Controlador.ControladorAlmacen;
+import Controlador.ControladorProduccion;
 import DTOs.AlmacenDTO;
+import DTOs.ProduccionDTO;
 import Modelo.EstadoAlmacen;
-import com.toedter.calendar.JDateChooser; // Asumiendo que usas JDateChooser
+import com.toedter.calendar.JDateChooser; 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 /**
@@ -25,6 +25,7 @@ import java.util.Set;
  */
 public class IntFrmAlmacen extends javax.swing.JInternalFrame {
     
+    private int idSeleccionado = -1;
     private ControladorAlmacen controlador;
     private AlmacenDTO almacenSeleccionado;
    
@@ -74,6 +75,7 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
 
 
     private void limpiar() {
+        txtId.setText("");
         txtCantidad.setText("");
         jDateChooserIngreso.setDate(null);
         jDateChooserEgreso.setDate(null);
@@ -86,83 +88,116 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
 
 
     private void guardar() {
-        if (!validarRequeridos(ComboBoxProduccion, txtCantidad, jDateChooserIngreso, ComboBoxEstado)) {
-            mostrarError("Faltan datos requeridos", "Error");
-            return;
-        }
-
-        try {
-            int produccionId = Integer.parseInt(ComboBoxProduccion.getSelectedItem().toString());
-            double cantidad = Double.parseDouble(txtCantidad.getText());
-            LocalDate fechaIngreso = toLocalDate(jDateChooserIngreso.getDate());
-            LocalDate fechaEgreso = jDateChooserEgreso.getDate() != null ? toLocalDate(jDateChooserEgreso.getDate()) : null;
-            EstadoAlmacen estado = (EstadoAlmacen) ComboBoxEstado.getSelectedItem();
-
-            AlmacenDTO dto = new AlmacenDTO(0, produccionId, cantidad, fechaIngreso, fechaEgreso, estado);
-
-            if (controlador.registrarAlmacen(dto)) {
-                mostrarMensaje("Registro agregado correctamente", "Éxito");
-                limpiar();
-                cargarTabla();
-            } else {
-                mostrarError("No se pudo agregar el registro", "Error");
-            }
-
-        } catch (Exception ex) {
-            mostrarError("Error: " + ex.getMessage(), "Error");
-        }
+        
+    if (!validarRequeridos(ComboBoxProduccion, txtCantidad, jDateChooserIngreso, ComboBoxEstado)) {
+        mostrarError("Faltan datos requeridos", "Error");
+        return;
     }
 
-    private void actualizar() {
-        if (almacenSeleccionado == null) {
-            mostrarError("Debe seleccionar un registro para actualizar", "Error");
+    try {
+        Object selectedItem = ComboBoxProduccion.getSelectedItem();
+        if (selectedItem == null) {
+            mostrarError("Debe seleccionar una producción válida", "Error");
             return;
         }
-        if (!validarRequeridos(ComboBoxProduccion, txtCantidad, jDateChooserIngreso, ComboBoxEstado)) {
-            mostrarError("Faltan datos requeridos", "Error");
-            return;
+        int produccionId = Integer.parseInt(selectedItem.toString());
+
+        
+        double cantidad = Double.parseDouble(txtCantidad.getText());
+        LocalDate fechaIngreso = toLocalDate(jDateChooserIngreso.getDate());
+        LocalDate fechaEgreso = jDateChooserEgreso.getDate() != null 
+                                ? toLocalDate(jDateChooserEgreso.getDate()) 
+                                : null;
+        EstadoAlmacen estado = EstadoAlmacen.valueOf(ComboBoxEstado.getSelectedItem().toString());
+
+       
+        AlmacenDTO dto = new AlmacenDTO(0, produccionId, cantidad, fechaIngreso, fechaEgreso, estado);
+
+        
+        if (controlador.registrarAlmacen(dto)) {
+            mostrarMensaje("Registro agregado correctamente", "Éxito");
+            limpiar();
+            cargarTabla();
+        } else {
+            mostrarError("No se pudo agregar el registro", "Error");
         }
 
-        try {
-            int produccionId = Integer.parseInt(ComboBoxProduccion.getSelectedItem().toString());
-            double cantidad = Double.parseDouble(txtCantidad.getText());
-            LocalDate fechaIngreso = toLocalDate(jDateChooserIngreso.getDate());
-            LocalDate fechaEgreso = jDateChooserEgreso.getDate() != null ? toLocalDate(jDateChooserEgreso.getDate()) : null;
-            EstadoAlmacen estado = (EstadoAlmacen) ComboBoxEstado.getSelectedItem();
-
-            AlmacenDTO dto = new AlmacenDTO(almacenSeleccionado.getId(), produccionId, cantidad, fechaIngreso, fechaEgreso, estado);
-
-            if (controlador.actualizarAlmacen(dto)) {
-                mostrarMensaje("Registro actualizado correctamente", "Éxito");
-                limpiar();
-                cargarTabla();
-            } else {
-                mostrarError("No se pudo actualizar el registro", "Error");
-            }
-
-        } catch (Exception ex) {
-            mostrarError("Error: " + ex.getMessage(), "Error");
-        }
+    } catch (NumberFormatException ex) {
+        mostrarError("Cantidad o ID de producción inválido", "Error");
+    } catch (Exception ex) {
+        mostrarError("Error: " + ex.getMessage(), "Error");
+    }
     }
 
-    private void eliminar() {
-        if (almacenSeleccionado == null) {
-            mostrarError("Debe seleccionar un registro para eliminar", "Error");
-            return;
+
+   private void eliminar() {
+    if (idSeleccionado == -1) {
+        mostrarError("Debe seleccionar un registro para eliminar", "Error");
+        return;
+    }
+
+    try {
+        if (controlador.eliminarAlmacen(idSeleccionado)) {
+            mostrarMensaje("Registro eliminado correctamente", "Éxito");
+            limpiar();
+            cargarTabla();
+            idSeleccionado = -1; 
+        } else {
+            mostrarError("No se pudo eliminar el registro", "Error");
         }
 
-        try {
-            if (controlador.eliminarAlmacen(almacenSeleccionado.getId())) {
-                mostrarMensaje("Registro eliminado correctamente", "Éxito");
-                limpiar();
-                cargarTabla();
-            } else {
-                mostrarError("No se pudo eliminar el registro", "Error");
-            }
-        } catch (Exception ex) {
-            mostrarError("Error: " + ex.getMessage(), "Error");
-        }
+    } catch (Exception ex) {
+        mostrarError("Error: " + ex.getMessage(), "Error");
     }
+}
+    
+private void actualizar() {
+   if (idSeleccionado == -1) {
+        mostrarError("Debe seleccionar un registro para modificar", "Error");
+        return;
+    }
+
+    try {
+        int produccionId = Integer.parseInt(ComboBoxProduccion.getSelectedItem().toString());
+        double cantidad = Double.parseDouble(txtCantidad.getText());
+
+        LocalDate fechaIngreso = jDateChooserIngreso.getDate()
+                .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        LocalDate fechaEgreso = null;
+        if (jDateChooserEgreso.getDate() != null) {
+            fechaEgreso = jDateChooserEgreso.getDate()
+                    .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        }
+
+        EstadoAlmacen estado = EstadoAlmacen.valueOf(
+                ComboBoxEstado.getSelectedItem().toString()
+        );
+
+
+        AlmacenDTO dto = new AlmacenDTO(
+                idSeleccionado,
+                produccionId,
+                cantidad,
+                fechaIngreso,
+                fechaEgreso,
+                estado
+        );
+
+  
+        if (controlador.actualizarAlmacen(dto)) {
+            mostrarMensaje("Registro modificado correctamente", "Éxito");
+            limpiar();
+            cargarTabla();
+            idSeleccionado = -1;
+        } else {
+            mostrarError("No se pudo modificar el registro", "Error");
+        }
+
+    } catch (Exception ex) {
+        mostrarError("Error al modificar: " + ex.getMessage(), "Error");
+    }
+}
 
 
 
@@ -196,59 +231,67 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
     }
 
     private void buscar() {
-        try {
-            String texto = txtBuscar.getText().trim();
-            List<AlmacenDTO> lista = controlador.buscar(texto);
-            DefaultTableModel model = (DefaultTableModel) TbtAlmacen.getModel();
-            model.setRowCount(0);
-            for (AlmacenDTO a : lista) {
-                model.addRow(new Object[]{
-                        a.getId(),
-                        a.getProduccionId(),
-                        a.getCantidadDisponible(),
-                        a.getFechaIngreso(),
-                        a.getFechaEgreso(),
-                        a.getEstado()
-                });
-            }
-        } catch (Exception ex) {
-            mostrarError("Error al buscar datos: " + ex.getMessage(), "Error");
+           try {
+        String texto = txtBuscar.getText().trim();
+
+
+        if (texto.isEmpty()) {
+            cargarTabla(); 
+            return;
         }
+
+        List<AlmacenDTO> lista = controlador.buscar(texto);
+
+        DefaultTableModel model = (DefaultTableModel) TbtAlmacen.getModel();
+        model.setRowCount(0);
+
+        for (AlmacenDTO a : lista) {
+            model.addRow(new Object[]{
+                    a.getId(),
+                    a.getProduccionId(),
+                    a.getCantidadDisponible(),
+                    a.getFechaIngreso(),
+                    a.getFechaEgreso(),
+                    a.getEstado()
+            });
+        }
+
+    } catch (Exception ex) {
+        mostrarError("Error al buscar datos: " + ex.getMessage(), "Error");
+    }
     }
     
      private void cargarCombos() {
 
-    String[] estados = Arrays.stream(EstadoAlmacen.values())
-                             .map(Enum::name)
-                             .toArray(String[]::new);
-    ComboBoxEstado.setModel(new DefaultComboBoxModel<>(estados));
-
+     ComboBoxEstado.setModel(new DefaultComboBoxModel<>(
+        Arrays.stream(EstadoAlmacen.values())
+              .map(Enum::name)
+              .toArray(String[]::new)
+    ));
     if (ComboBoxEstado.getItemCount() > 0) {
         ComboBoxEstado.setSelectedIndex(0);
     }
-    try {
-        List<AlmacenDTO> listaAlmacenes = controlador.listarAlmacenes();
-        DefaultComboBoxModel<String> modeloProduccion = new DefaultComboBoxModel<>();
-        Set<Integer> idsUnicos = new HashSet<>();
 
-        for (AlmacenDTO a : listaAlmacenes) {
-            if (!idsUnicos.contains(a.getProduccionId())) {
-                idsUnicos.add(a.getProduccionId());
-                modeloProduccion.addElement(String.valueOf(a.getProduccionId()));
-            }
+    try {
+        List<ProduccionDTO> producciones = new ControladorProduccion().listarProducciones();
+        DefaultComboBoxModel<String> modeloProduccion = new DefaultComboBoxModel<>();
+
+        for (ProduccionDTO p : producciones) {
+            modeloProduccion.addElement(String.valueOf(p.getIdProduccion()));
         }
 
         ComboBoxProduccion.setModel(modeloProduccion);
-
-
         if (modeloProduccion.getSize() > 0) {
             ComboBoxProduccion.setSelectedIndex(0);
         }
 
     } catch (Exception ex) {
-        mostrarError("Error al cargar Producción: " + ex.getMessage(), "Error");
+        mostrarError("Error al cargar Producciones: " + ex.getMessage(), "Error");
     }
 }
+     
+   
+
 
     
     
@@ -275,18 +318,19 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
         jDateChooserEgreso = new com.toedter.calendar.JDateChooser();
         jLabel5 = new javax.swing.JLabel();
         ComboBoxEstado = new javax.swing.JComboBox<>();
+        jLabel6 = new javax.swing.JLabel();
+        txtId = new javax.swing.JTextField();
         REGISTRO2 = new javax.swing.JPanel();
         btnGuardar = new javax.swing.JButton();
-        btnActualizar = new javax.swing.JButton();
         btnEliminar = new javax.swing.JButton();
         btnLimpiar = new javax.swing.JButton();
+        btnModificar = new javax.swing.JButton();
         ALMACEN1 = new javax.swing.JLabel();
         txtBuscar = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         TbtAlmacen = new javax.swing.JTable();
         btnBuscar = new javax.swing.JButton();
-        btnPDF = new javax.swing.JButton();
-        btnXML = new javax.swing.JButton();
+        btnTablaAlertas = new javax.swing.JButton();
 
         setBackground(new java.awt.Color(0, 204, 102));
         setClosable(true);
@@ -308,7 +352,7 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
         ALMACEN.setBackground(new java.awt.Color(153, 255, 204));
         ALMACEN.setFont(new java.awt.Font("Bodoni MT", 1, 36)); // NOI18N
         ALMACEN.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        ALMACEN.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Tabla.png"))); // NOI18N
+        ALMACEN.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/filtrar.png"))); // NOI18N
         ALMACEN.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
         ALMACEN.setOpaque(true);
 
@@ -316,7 +360,7 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
         REGISTRO.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
 
         jLabel1.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
-        jLabel1.setText("Producción:");
+        jLabel1.setText("Id:");
 
         ComboBoxProduccion.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
         ComboBoxProduccion.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
@@ -349,6 +393,20 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
         ComboBoxEstado.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
         ComboBoxEstado.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
 
+        jLabel6.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
+        jLabel6.setText("Producción:");
+
+        txtId.setEditable(false);
+        txtId.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
+        txtId.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtId.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
+        txtId.setEnabled(false);
+        txtId.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtIdActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout REGISTROLayout = new javax.swing.GroupLayout(REGISTRO);
         REGISTRO.setLayout(REGISTROLayout);
         REGISTROLayout.setHorizontalGroup(
@@ -358,17 +416,24 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
                     .addGroup(REGISTROLayout.createSequentialGroup()
                         .addGap(40, 40, 40)
                         .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
-                            .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
+                            .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(REGISTROLayout.createSequentialGroup()
+                                .addGap(23, 23, 23)
+                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addGroup(REGISTROLayout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel3)))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, REGISTROLayout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jLabel3)))
+                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(10, 10, 10)))
                 .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(REGISTROLayout.createSequentialGroup()
                         .addGap(7, 7, 7)
-                        .addComponent(jDateChooserIngreso, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(jDateChooserIngreso, javax.swing.GroupLayout.DEFAULT_SIZE, 237, Short.MAX_VALUE))
                     .addGroup(REGISTROLayout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jDateChooserEgreso, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -380,33 +445,40 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
                         .addComponent(ComboBoxProduccion, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, REGISTROLayout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(ComboBoxEstado, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(ComboBoxEstado, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, REGISTROLayout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtId)))
                 .addContainerGap())
         );
         REGISTROLayout.setVerticalGroup(
             REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(REGISTROLayout.createSequentialGroup()
-                .addGap(25, 25, 25)
+                .addContainerGap(26, Short.MAX_VALUE)
                 .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(ComboBoxProduccion, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(13, 13, 13)
+                    .addComponent(txtId, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
                 .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtCantidad, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(11, 11, 11)
-                .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jDateChooserIngreso, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(ComboBoxProduccion, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel6))
+                .addGap(18, 18, 18)
+                .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtCantidad, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jDateChooserIngreso, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jDateChooserEgreso, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(jDateChooserEgreso, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(ComboBoxEstado, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(28, Short.MAX_VALUE))
+                    .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ComboBoxEstado, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
         );
 
         REGISTRO2.setBackground(new java.awt.Color(0, 153, 102));
@@ -418,15 +490,6 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
         btnGuardar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnGuardarActionPerformed(evt);
-            }
-        });
-
-        btnActualizar.setBackground(new java.awt.Color(153, 255, 204));
-        btnActualizar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Refrescar.png"))); // NOI18N
-        btnActualizar.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-        btnActualizar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnActualizarActionPerformed(evt);
             }
         });
 
@@ -448,6 +511,16 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
             }
         });
 
+        btnModificar.setBackground(new java.awt.Color(153, 255, 204));
+        btnModificar.setFont(new java.awt.Font("Bell MT", 1, 24)); // NOI18N
+        btnModificar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Refrescar.png"))); // NOI18N
+        btnModificar.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
+        btnModificar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnModificarActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout REGISTRO2Layout = new javax.swing.GroupLayout(REGISTRO2);
         REGISTRO2.setLayout(REGISTRO2Layout);
         REGISTRO2Layout.setHorizontalGroup(
@@ -458,18 +531,18 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
                     .addComponent(btnGuardar, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnEliminar, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 43, Short.MAX_VALUE)
-                .addGroup(REGISTRO2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnActualizar, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnLimpiar, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(REGISTRO2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(btnLimpiar, javax.swing.GroupLayout.DEFAULT_SIZE, 161, Short.MAX_VALUE)
+                    .addComponent(btnModificar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(25, 25, 25))
         );
         REGISTRO2Layout.setVerticalGroup(
             REGISTRO2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, REGISTRO2Layout.createSequentialGroup()
-                .addContainerGap(12, Short.MAX_VALUE)
-                .addGroup(REGISTRO2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(REGISTRO2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                     .addGroup(REGISTRO2Layout.createSequentialGroup()
-                        .addComponent(btnActualizar, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnModificar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGap(18, 18, 18)
                         .addComponent(btnLimpiar, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(REGISTRO2Layout.createSequentialGroup()
@@ -527,6 +600,11 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
             public void ancestorRemoved(javax.swing.event.AncestorEvent evt) {
             }
         });
+        TbtAlmacen.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                TbtAlmacenMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(TbtAlmacen);
 
         btnBuscar.setBackground(new java.awt.Color(153, 255, 204));
@@ -538,45 +616,42 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
             }
         });
 
-        btnPDF.setBackground(new java.awt.Color(153, 255, 204));
-        btnPDF.setFont(new java.awt.Font("Bell MT", 1, 24)); // NOI18N
-        btnPDF.setText("Generar PDF");
-        btnPDF.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-
-        btnXML.setBackground(new java.awt.Color(153, 255, 204));
-        btnXML.setFont(new java.awt.Font("Bell MT", 1, 24)); // NOI18N
-        btnXML.setText("Generar XML");
-        btnXML.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
+        btnTablaAlertas.setBackground(new java.awt.Color(153, 255, 204));
+        btnTablaAlertas.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Tabla.png"))); // NOI18N
+        btnTablaAlertas.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
+        btnTablaAlertas.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnTablaAlertasActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout PanelPrincipalLayout = new javax.swing.GroupLayout(PanelPrincipal);
         PanelPrincipal.setLayout(PanelPrincipalLayout);
         PanelPrincipalLayout.setHorizontalGroup(
             PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(PanelPrincipalLayout.createSequentialGroup()
-                .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, PanelPrincipalLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(ALMACEN1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(PanelPrincipalLayout.createSequentialGroup()
-                        .addContainerGap()
                         .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(REGISTRO, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(REGISTRO2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(PanelPrincipalLayout.createSequentialGroup()
                                 .addGap(8, 8, 8)
-                                .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addGroup(PanelPrincipalLayout.createSequentialGroup()
-                                        .addComponent(ALMACEN, javax.swing.GroupLayout.PREFERRED_SIZE, 81, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(txtBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 589, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(0, 9, Short.MAX_VALUE))))
+                                .addComponent(ALMACEN, javax.swing.GroupLayout.PREFERRED_SIZE, 81, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(txtBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 589, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 9, Short.MAX_VALUE))
                             .addGroup(PanelPrincipalLayout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(btnBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnPDF, javax.swing.GroupLayout.PREFERRED_SIZE, 252, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnXML, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                    .addComponent(ALMACEN1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jScrollPane1)
+                                    .addGroup(PanelPrincipalLayout.createSequentialGroup()
+                                        .addComponent(btnBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 326, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(btnTablaAlertas, javax.swing.GroupLayout.PREFERRED_SIZE, 326, javax.swing.GroupLayout.PREFERRED_SIZE)))))))
                 .addContainerGap())
         );
         PanelPrincipalLayout.setVerticalGroup(
@@ -584,25 +659,24 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
             .addGroup(PanelPrincipalLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(ALMACEN1, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(PanelPrincipalLayout.createSequentialGroup()
-                        .addGap(3, 3, 3)
                         .addComponent(REGISTRO, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(REGISTRO2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(REGISTRO2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(13, 13, 13))
                     .addGroup(PanelPrincipalLayout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(txtBuscar)
-                            .addComponent(ALMACEN, javax.swing.GroupLayout.DEFAULT_SIZE, 72, Short.MAX_VALUE))
+                            .addComponent(ALMACEN, javax.swing.GroupLayout.DEFAULT_SIZE, 60, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(btnBuscar, javax.swing.GroupLayout.DEFAULT_SIZE, 60, Short.MAX_VALUE)
-                            .addComponent(btnPDF, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnXML, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addContainerGap())
+                        .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnTablaAlertas, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18))))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -645,10 +719,6 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
         guardar();
     }//GEN-LAST:event_btnGuardarActionPerformed
 
-    private void btnActualizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarActionPerformed
-        actualizar();
-    }//GEN-LAST:event_btnActualizarActionPerformed
-
     private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
        eliminar();
     }//GEN-LAST:event_btnEliminarActionPerformed
@@ -665,6 +735,76 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
     }
     }//GEN-LAST:event_TbtAlmacenAncestorAdded
 
+    private void txtIdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtIdActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtIdActionPerformed
+
+    private void TbtAlmacenMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TbtAlmacenMouseClicked
+    int fila = TbtAlmacen.getSelectedRow();
+    if (fila == -1) return;
+
+    idSeleccionado = Integer.parseInt(TbtAlmacen.getValueAt(fila, 0).toString());
+    txtId.setText(String.valueOf(idSeleccionado));
+
+    ComboBoxProduccion.setSelectedItem(
+            TbtAlmacen.getValueAt(fila, 1).toString()
+    );
+
+    txtCantidad.setText(TbtAlmacen.getValueAt(fila, 2).toString());
+
+    try {
+        Object valor = TbtAlmacen.getValueAt(fila, 3);
+        if (valor != null) {
+            java.sql.Date fecha = java.sql.Date.valueOf(valor.toString());
+            jDateChooserIngreso.setDate(fecha);
+        } else {
+            jDateChooserIngreso.setDate(null);
+        }
+    } catch (Exception e) {
+        jDateChooserIngreso.setDate(null);
+    }
+
+    try {
+        Object valor = TbtAlmacen.getValueAt(fila, 4);
+        if (valor != null) {
+            java.sql.Date fecha = java.sql.Date.valueOf(valor.toString());
+            jDateChooserEgreso.setDate(fecha);
+        } else {
+            jDateChooserEgreso.setDate(null);
+        }
+    } catch (Exception e) {
+        jDateChooserEgreso.setDate(null);
+    }
+
+    ComboBoxEstado.setSelectedItem(
+            TbtAlmacen.getValueAt(fila, 5).toString()
+    );
+    }//GEN-LAST:event_TbtAlmacenMouseClicked
+
+    private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarActionPerformed
+       actualizar();
+    }//GEN-LAST:event_btnModificarActionPerformed
+
+    private void btnTablaAlertasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTablaAlertasActionPerformed
+        try {
+        // Evitar abrir varias veces
+        for (JInternalFrame f : getDesktopPane().getAllFrames()) {
+            if (f instanceof IntFrmAlertas) {
+                f.toFront();
+                f.requestFocus();
+                return;
+            }
+        }
+
+        IntFrmAlertas alertas = new IntFrmAlertas(controlador);
+        getDesktopPane().add(alertas);
+        alertas.setVisible(true);
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error al abrir alertas: " + e.getMessage());
+    }
+    }//GEN-LAST:event_btnTablaAlertasActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel ALMACEN;
@@ -675,13 +815,12 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
     private javax.swing.JPanel REGISTRO;
     private javax.swing.JPanel REGISTRO2;
     private javax.swing.JTable TbtAlmacen;
-    private javax.swing.JButton btnActualizar;
     private javax.swing.JButton btnBuscar;
     private javax.swing.JButton btnEliminar;
     private javax.swing.JButton btnGuardar;
     private javax.swing.JButton btnLimpiar;
-    private javax.swing.JButton btnPDF;
-    private javax.swing.JButton btnXML;
+    private javax.swing.JButton btnModificar;
+    private javax.swing.JButton btnTablaAlertas;
     private com.toedter.calendar.JDateChooser jDateChooserEgreso;
     private com.toedter.calendar.JDateChooser jDateChooserIngreso;
     private javax.swing.JLabel jLabel1;
@@ -689,8 +828,10 @@ public class IntFrmAlmacen extends javax.swing.JInternalFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField txtBuscar;
     private javax.swing.JTextField txtCantidad;
+    private javax.swing.JTextField txtId;
     // End of variables declaration//GEN-END:variables
 }
