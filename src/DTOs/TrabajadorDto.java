@@ -21,7 +21,11 @@ public class TrabajadorDto {
     private TrabajadorCampo tipoTrabajador;
     private double salario;
 
-    public TrabajadorDto(String cedula, String nombre, String telefono, String correo, Administrador puesto, double salario, TrabajadorCampo tipoTrabajador, int obtenerNivelCampo) {
+    public TrabajadorDto(){
+    }
+
+    public TrabajadorDto(int id, String cedula, String nombre, String telefono, String correo, Administrador puesto, TrabajadorCampo tipoTrabajador, double salario) {
+        this.id = id;
         this.cedula = cedula;
         this.nombre = nombre;
         this.telefono = telefono;
@@ -29,9 +33,6 @@ public class TrabajadorDto {
         this.puesto = puesto;
         this.tipoTrabajador = tipoTrabajador;
         this.salario = salario;
-    }
-
-    public TrabajadorDto(String cedula1, String correo1, String nombre1, String telefono1) {
     }
 
     public int getId() {
@@ -97,6 +98,5 @@ public class TrabajadorDto {
     public void setSalario(double salario) {
         this.salario = salario;
     }
-    
     
 }
