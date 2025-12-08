@@ -200,5 +200,130 @@ public class UsuarioDao implements IUsuarioDao{
         }
 
         return lista;
-    } 
+    }
+    
+    public Usuario autenticar(String usuario, String contraseña) throws Exception {
+        try {
+            String sql = "SELECT * FROM usuarios WHERE usuario = ? AND contraseña = ?";
+
+            Connection con = ConexionBD.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, usuario);
+            ps.setString(2, contraseña);
+
+            ResultSet rs = ps.executeQuery();
+            Usuario u = null;
+
+            if (rs.next()) {
+                u = new Usuario(
+                    rs.getInt("id"),
+                    rs.getString("usuario"),
+                    rs.getString("contraseña"),
+                    rs.getString("cedula"),
+                    rs.getString("nombre"),
+                    rs.getString("telefono"),
+                    rs.getString("correo")
+                );
+            }
+
+            rs.close();
+            ps.close();
+            return u;
+
+        } catch (SQLException ex) {
+            System.out.println("Error en autenticar(): " + ex);
+            return null;
+        }
+    }
+
+    public Usuario buscarPorUsuario(String usuario) throws Exception {
+        try {
+            String sql = "SELECT * FROM usuarios WHERE usuario = ?";
+
+            Connection con = ConexionBD.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, usuario);
+
+            ResultSet rs = ps.executeQuery();
+            Usuario u =null;
+
+            if (rs.next()){
+                u = new Usuario(
+                    rs.getInt("id"),
+                    rs.getString("usuario"),
+                    rs.getString("contraseña"),
+                    rs.getString("cedula"),
+                    rs.getString("nombre"),
+                    rs.getString("telefono"),
+                    rs.getString("correo")
+                );
+            }
+
+            rs.close();
+            ps.close();
+            return u;
+
+        } catch (SQLException ex) {
+            System.out.println("Error en buscarPorUsuario(): " + ex);
+            return null;
+        }
+    }
+
+    public boolean existeUsuario(String usuario) throws Exception {
+        try {
+            String sql = "SELECT COUNT(*) FROM usuarios WHERE usuario = ?";
+
+            Connection con = ConexionBD.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, usuario);
+
+            ResultSet rs = ps.executeQuery();
+            boolean existe = false;
+
+            if (rs.next()) {
+                existe = rs.getInt(1) > 0;
+            }
+
+            rs.close();
+            ps.close();
+            return existe;
+
+        } catch (SQLException ex) {
+            System.out.println("Error en existeUsuario(): " + ex);
+            return false;
+        }
+    }
+    
+    public Usuario buscarPorCedula(String cedula) throws Exception {
+        try {
+            String sql = "SELECT * FROM usuarios WHERE cedula = ?";
+
+            Connection con = ConexionBD.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, cedula);
+
+            ResultSet rs = ps.executeQuery();
+            Usuario u = null;
+
+            if (rs.next()) {
+                u = new Usuario(
+                    rs.getInt("id"),
+                    rs.getString("usuario"),
+                    rs.getString("contraseña"),
+                    rs.getString("cedula"),
+                    rs.getString("nombre"),
+                    rs.getString("telefono"),
+                    rs.getString("correo")
+                );
+            }
+
+            rs.close();
+            ps.close();
+            return u;
+
+        } catch (SQLException ex) {
+            System.out.println("Error en buscarPorCedula(): " + ex);
+            return null;
+        }
+    }
 }
