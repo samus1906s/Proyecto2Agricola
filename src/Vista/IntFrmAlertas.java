@@ -32,7 +32,6 @@ public class IntFrmAlertas extends javax.swing.JInternalFrame {
          DefaultTableModel model = (DefaultTableModel) TbtTablaAlmacenAlertas.getModel();
     model.setRowCount(0);
 
-    // Aseguramos columnas
     if (model.getColumnCount() < 8) { 
         model.setColumnIdentifiers(new Object[]{"ID", "Prod ID", "Cantidad", "F. Ingreso", "F. Egreso", "Días Total", "Días Extra", "Estado"});
     }
@@ -44,23 +43,17 @@ public class IntFrmAlertas extends javax.swing.JInternalFrame {
 
         for (AlmacenDTO a : lista) {
             
-            // --- INICIO CORRECCIÓN DE FECHAS ---
             long diasTotal = 0;
             
-            // 1. Imprimir en consola para ver qué trae la base de datos (MIRA LA CONSOLA DE NETBEANS)
             System.out.println("Producto ID: " + a.getId() + " | Fecha en DTO: " + a.getFechaIngreso());
 
             if (a.getFechaIngreso() != null) {
-                // 2. Conversión explícita segura
-                // Asumimos que getFechaIngreso() devuelve java.sql.Date o java.util.Date
-                // Lo convertimos a String y luego a LocalDate para evitar errores de tipos
-                String fechaStr = a.getFechaIngreso().toString(); // Formato esperado: yyyy-MM-dd
+
+                String fechaStr = a.getFechaIngreso().toString(); 
                 LocalDate fechaIngresoLocal = LocalDate.parse(fechaStr);
                 
-                // 3. Calculamos la diferencia
                 diasTotal = java.time.temporal.ChronoUnit.DAYS.between(fechaIngresoLocal, hoy);
             }
-            // --- FIN CORRECCIÓN ---
 
             if (diasTotal < 0) diasTotal = 0;
 
@@ -83,7 +76,6 @@ public class IntFrmAlertas extends javax.swing.JInternalFrame {
             model.addRow(fila);
         }
 
-        // Renderer para pintar de ROJO
         TbtTablaAlmacenAlertas.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
             @Override
             public java.awt.Component getTableCellRendererComponent(
@@ -94,7 +86,6 @@ public class IntFrmAlertas extends javax.swing.JInternalFrame {
                         table, value, isSelected, hasFocus, row, column);
 
                 try {
-                    // Verificamos columna 5 (Días Total)
                     Object valDias = table.getValueAt(row, 5); 
                     if (valDias != null) {
                         long dias = Long.parseLong(valDias.toString());

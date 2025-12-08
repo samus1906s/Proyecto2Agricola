@@ -51,7 +51,7 @@ public class ControladorAlmacen {
     }
     
     public List<AlmacenDTO> listarAlmacenesConAlertas(int diasLimite) throws Exception {
-    // 1. Obtenemos toda la lista
+    
     List<AlmacenDTO> lista = servicio.listar(); 
     List<AlmacenDTO> alertas = new ArrayList<>();
 
@@ -61,15 +61,11 @@ public class ControladorAlmacen {
         if (a.getFechaIngreso() != null) {
             long diasAlmacen = java.time.temporal.ChronoUnit.DAYS.between(a.getFechaIngreso(), hoy);
             
-            // --- CORRECCIÓN CRÍTICA ---
-            // Si la fecha del sistema está atrasada, 'diasAlmacen' da negativo.
-            // Lo forzamos a 0 para evitar errores lógicos.
+            
             if (diasAlmacen < 0) {
                 diasAlmacen = 0; 
             }
-            // --------------------------
-
-            // Solo agregamos a la lista si supera el límite establecido (ej. 15 días)
+            
             if (diasAlmacen >= diasLimite) {
                 alertas.add(a);
             }
