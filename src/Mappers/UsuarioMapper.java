@@ -16,25 +16,31 @@ public class UsuarioMapper implements iMapper<Usuario, UsuarioDto>{
 
     @Override
     public UsuarioDto ToDto(Usuario entidad) {
+        if (entidad == null) return null;
+        
           return new UsuarioDto(
-                  entidad.getUser(),
-                  entidad.getContraseña(),
+                  entidad.getId(),
                   entidad.getCedula(),
                   entidad.getNombre(),
                   entidad.getTelefono(),
-                  entidad.getCorreo()
+                  entidad.getCorreo(),
+                  entidad.getUser(),
+                  entidad.getContraseña()
         );
     }
 
     @Override
     public Usuario ToEntidad(UsuarioDto dto) {
+         if (dto == null) return null;
+         
         return new Usuario(
-                  dto.getUser(),
-                  dto.getContraseña(),
-                  dto.getCedula(),
-                  dto.getNombre(),
-                  dto.getTelefono(),
-                  dto.getCorreo()
+                dto.getId(),
+                dto.getUsuario(),
+                dto.getContraseña(),
+                dto.getCedula(),
+                dto.getNombre(),
+                dto.getTelefono(),
+                dto.getCorreo()
         );
     }
     

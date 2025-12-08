@@ -16,28 +16,33 @@ public class TrabajadorMapper implements iMapper<Trabajador, TrabajadorDto>{
 
     @Override
     public TrabajadorDto ToDto(Trabajador entidad) {
-        return new TrabajadorDto(
+        if (entidad == null) return null;
+         
+        return new TrabajadorDto(  
+                entidad.getId(),
                 entidad.getCedula(),
-                entidad.getCorreo(),
                 entidad.getNombre(),
                 entidad.getTelefono(),
+                entidad.getCorreo(),
                 entidad.getPuesto(),
-                entidad.getSalario(),
                 entidad.getTipo(),
-                entidad.obtenerNivelCampo()
+                entidad.getSalario()
         );
     }
 
     @Override
     public Trabajador ToEntidad(TrabajadorDto dto) {
+        if (dto == null) return null;
+
         return new Trabajador(
                 dto.getId(),
+                dto.getPuesto(),
+                dto.getTipoTrabajador(),
+                dto.getSalario(),
                 dto.getCedula(),
-                dto.getCorreo(),
                 dto.getNombre(),
                 dto.getTelefono(),
-                dto.getPuesto(),
-                dto.getSalario()
+                dto.getCorreo()
         );
     }
     

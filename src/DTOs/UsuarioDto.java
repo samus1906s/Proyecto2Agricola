@@ -19,7 +19,7 @@ public class UsuarioDto {
     private String contraseña;
     private String rol;
 
-    public UsuarioDto(){
+    public UsuarioDto(int id1, String cedula1, String nombre1, String telefono1, String correo1, String user, String contraseña1){
     }
 
     public UsuarioDto(int id, String cedula, String nombre, String telefono, String correo, String usuario, String contraseña, String rol) {
