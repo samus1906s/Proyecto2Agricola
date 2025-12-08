@@ -5,6 +5,7 @@
 package Interfaces;
 
 import Modelo.Trabajador;
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -12,10 +13,10 @@ import java.util.List;
  * @author Reynold
  */
 public interface ITrabjadorDao {
-    public boolean crear(Trabajador t) throws Exception;
-    public Trabajador Leer(int id) throws Exception;
-    public List<Trabajador> lista() throws Exception;
-    public boolean actualizar(Trabajador c) throws Exception;
-    public boolean eliminar(int id) throws Exception;
-    public List<Trabajador> Buscar(String texto) throws Exception;
+    public boolean crear(Trabajador t) throws SQLException;
+    public Trabajador Leer(int id) throws SQLException;
+    public List<Trabajador> lista() throws SQLException;
+    public boolean actualizar(Trabajador c) throws SQLException;
+    public boolean eliminar(int id) throws SQLException;
+    public List<Trabajador> Buscar(String texto) throws SQLException;
 }
