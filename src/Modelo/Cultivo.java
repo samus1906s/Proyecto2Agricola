@@ -15,13 +15,15 @@ public class Cultivo {
     private int idCultivo;                  
     private String nombre;                  
     private TiposCultivo tipo;             
-    private double areaSembrada;            
+    private double areaSembrada;
     private EstadoCrecimiento estado;       
     private LocalDate fechaSiembra;         
-    private LocalDate fechaCosecha;         
+    private LocalDate fechaCosecha;
 
+    public Cultivo() {
+    }
 
-    public Cultivo(int idCultivo, String nombre, TiposCultivo tipo, double areaSembrada,EstadoCrecimiento estado, LocalDate fechaSiembra, LocalDate fechaCosecha) {
+    public Cultivo(int idCultivo, String nombre, TiposCultivo tipo, double areaSembrada, EstadoCrecimiento estado, LocalDate fechaSiembra, LocalDate fechaCosecha) {
         this.idCultivo = idCultivo;
         this.nombre = nombre;
         this.tipo = tipo;
@@ -29,10 +31,6 @@ public class Cultivo {
         this.estado = estado;
         this.fechaSiembra = fechaSiembra;
         this.fechaCosecha = fechaCosecha;
-    }
-
-
-    public Cultivo() {
     }
 
     public int getIdCultivo() {
@@ -90,7 +88,6 @@ public class Cultivo {
     public void setFechaCosecha(LocalDate fechaCosecha) {
         this.fechaCosecha = fechaCosecha;
     }
-
 
     @Override
     public String toString() {

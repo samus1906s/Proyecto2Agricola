@@ -22,9 +22,9 @@ public class CultivoDAO implements ICultivoDAO {
     @Override
     public boolean crear(Cultivo c) throws Exception {
         String sql = "INSERT INTO cultivos (nombre, tipo, area_sembrada, estado, fecha_siembra, fecha_cosecha) VALUES (?, ?, ?, ?, ?, ?)";
-        
+    
         Connection con = ConexionBD.getConnection();
-        PreparedStatement ps = con.prepareStatement(sql);
+        PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
         ps.setString(1, c.getNombre());
         ps.setString(2, c.getTipo().name());
@@ -34,9 +34,17 @@ public class CultivoDAO implements ICultivoDAO {
         ps.setDate(6, Date.valueOf(c.getFechaCosecha()));
 
         int rows = ps.executeUpdate();
-
+ 
+        if (rows > 0) {
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                c.setIdCultivo(rs.getInt(1)); 
+            }
+            rs.close();
+        }  
+    
         ps.close(); 
-        
+    
         return rows > 0;
     }
 
@@ -58,6 +66,7 @@ public class CultivoDAO implements ICultivoDAO {
             c.setEstado(EstadoCrecimiento.valueOf(rs.getString("estado")));
             c.setFechaSiembra(rs.getDate("fecha_siembra").toLocalDate());
             c.setFechaCosecha(rs.getDate("fecha_cosecha").toLocalDate());
+            
             lista.add(c);
         }
         rs.close();
@@ -102,6 +111,7 @@ public class CultivoDAO implements ICultivoDAO {
         ps.setString(4, c.getEstado().name());
         ps.setDate(5, Date.valueOf(c.getFechaSiembra()));
         ps.setDate(6, Date.valueOf(c.getFechaCosecha()));
+        
         ps.setInt(7, c.getIdCultivo());
 
         int rows = ps.executeUpdate();
@@ -122,36 +132,36 @@ public class CultivoDAO implements ICultivoDAO {
     }
 
     @Override
-public List<Cultivo> Buscar(String texto) throws Exception {
-    
-    
-    String sql = "SELECT * FROM cultivos WHERE nombre LIKE ? OR tipo LIKE ? OR estado LIKE ?";
-    
-    Connection con = ConexionBD.getConnection();
-    PreparedStatement ps = con.prepareStatement(sql);
-    
-    
-    ps.setString(1, texto + "%"); 
-    ps.setString(2, texto + "%"); 
-    ps.setString(3, texto + "%"); 
+    public List<Cultivo> Buscar(String texto) throws Exception {
+        String sql = "SELECT * FROM cultivos WHERE id = ?";
+        
+        Connection con = ConexionBD.getConnection();
+        PreparedStatement ps = con.prepareStatement(sql);
+        
+        String busqueda = "%" + texto + "%";
+        ps.setString(1, busqueda); 
+        ps.setString(2, busqueda); 
+        ps.setString(3, busqueda);
+        ps.setString(4, busqueda);
 
-    ResultSet rs = ps.executeQuery();
-    List<Cultivo> lista = new ArrayList<>();
+        ResultSet rs = ps.executeQuery();
+        List<Cultivo> lista = new ArrayList<>();
 
-    while (rs.next()) {
-        Cultivo c = new Cultivo();
-        c.setIdCultivo(rs.getInt("id_cultivo"));
-        c.setNombre(rs.getString("nombre"));
-        c.setTipo(TiposCultivo.valueOf(rs.getString("tipo"))); 
-        c.setAreaSembrada(rs.getDouble("area_sembrada"));
-        c.setEstado(EstadoCrecimiento.valueOf(rs.getString("estado")));
-        c.setFechaSiembra(rs.getDate("fecha_siembra").toLocalDate());
-        c.setFechaCosecha(rs.getDate("fecha_cosecha").toLocalDate());
-        lista.add(c);
+        while (rs.next()) {
+            Cultivo c = new Cultivo();
+            c.setIdCultivo(rs.getInt("id_cultivo"));
+            c.setNombre(rs.getString("nombre"));
+            c.setTipo(TiposCultivo.valueOf(rs.getString("tipo"))); 
+            c.setAreaSembrada(rs.getDouble("area_sembrada"));
+            c.setEstado(EstadoCrecimiento.valueOf(rs.getString("estado")));
+            c.setFechaSiembra(rs.getDate("fecha_siembra").toLocalDate());
+            c.setFechaCosecha(rs.getDate("fecha_cosecha").toLocalDate());
+            
+            lista.add(c);
+        }
+        rs.close();
+        ps.close();
+        return lista;
     }
-    rs.close();
-    ps.close();
-    return lista;
-}
     
 }

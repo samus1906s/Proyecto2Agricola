@@ -19,13 +19,13 @@ public class MapperCultivo implements iMapper<Cultivo, DTOCultivo> {
         if (entidad == null) return null;
         
         return new DTOCultivo(
-                entidad.getIdCultivo(),
-                entidad.getNombre(),
-                entidad.getTipo(),
-                entidad.getAreaSembrada(),
-                entidad.getEstado(),
-                entidad.getFechaSiembra(),
-                entidad.getFechaCosecha()
+            entidad.getIdCultivo(),
+            entidad.getNombre(),
+            entidad.getTipo(),
+            entidad.getAreaSembrada(),
+            entidad.getEstado(),
+            entidad.getFechaSiembra(),
+            entidad.getFechaCosecha()
         );
     }
 
@@ -34,14 +34,13 @@ public class MapperCultivo implements iMapper<Cultivo, DTOCultivo> {
         if (dto == null) return null;
         
         return new Cultivo(
-                dto.getIdCultivo(),
-                dto.getNombre(),
-                dto.getTipo(),
-                dto.getAreaSembrada(),
-                dto.getEstado(),
-                dto.getFechaSiembra(),
-                dto.getFechaCosecha()
+            dto.getIdCultivo(),
+            dto.getNombre(),
+            dto.getTipo(),
+            dto.getAreaSembrada(),
+            dto.getEstado(),
+            dto.getFechaSiembra(),
+            dto.getFechaCosecha()
         );
     }
-    
 }

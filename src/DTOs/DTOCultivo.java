@@ -22,11 +22,9 @@ public class DTOCultivo {
     private LocalDate fechaSiembra;
     private LocalDate fechaCosecha;
 
-   
     public DTOCultivo() {
     }
 
-  
     public DTOCultivo(int idCultivo, String nombre, TiposCultivo tipo, double areaSembrada, EstadoCrecimiento estado, LocalDate fechaSiembra, LocalDate fechaCosecha) {
         this.idCultivo = idCultivo;
         this.nombre = nombre;
@@ -37,39 +35,48 @@ public class DTOCultivo {
         this.fechaCosecha = fechaCosecha;
     }
 
-  
-    public int getIdCultivo() { return idCultivo; 
+    public int getIdCultivo() { 
+        return idCultivo; 
     }
     
-    public void setIdCultivo(int idCultivo) { this.idCultivo = idCultivo; 
+    public void setIdCultivo(int idCultivo) { 
+        this.idCultivo = idCultivo; 
     }
 
-    public String getNombre() { return nombre; 
-    
+    public String getNombre() { 
+        return nombre; 
     }
     
-    public void setNombre(String nombre) { this.nombre = nombre; 
+    public void setNombre(String nombre) { 
+        this.nombre = nombre; 
     }
 
-    public TiposCultivo getTipo() { return tipo; 
+    public TiposCultivo getTipo() { 
+        return tipo; 
     }
     
-    public void setTipo(TiposCultivo tipo) { this.tipo = tipo; 
+    public void setTipo(TiposCultivo tipo) { 
+        this.tipo = tipo; 
     }
 
-    public double getAreaSembrada() { return areaSembrada; 
+    public double getAreaSembrada() { 
+        return areaSembrada; 
     }
     
-    public void setAreaSembrada(double areaSembrada) { this.areaSembrada = areaSembrada; 
+    public void setAreaSembrada(double areaSembrada) { 
+        this.areaSembrada = areaSembrada; 
     }
 
-    public EstadoCrecimiento getEstado() { return estado; 
+    public EstadoCrecimiento getEstado() { 
+        return estado; 
     }
     
-    public void setEstado(EstadoCrecimiento estado) { this.estado = estado; 
+    public void setEstado(EstadoCrecimiento estado) { 
+        this.estado = estado; 
     }
 
-    public LocalDate getFechaSiembra() { return fechaSiembra; 
+    public LocalDate getFechaSiembra() { 
+        return fechaSiembra; 
     }
     
     public void setFechaSiembra(LocalDate fechaSiembra) {
@@ -79,13 +86,13 @@ public class DTOCultivo {
     public LocalDate getFechaCosecha() {
         return fechaCosecha; 
     }
+    
     public void setFechaCosecha(LocalDate fechaCosecha) {
         this.fechaCosecha = fechaCosecha; 
     }
-    
+
     @Override
     public String toString() {
         return nombre;
     }
-    
 }

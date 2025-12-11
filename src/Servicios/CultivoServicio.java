@@ -28,7 +28,11 @@ public class CultivoServicio {
 
     public boolean registrar(DTOCultivo dto) throws Exception {
         Cultivo cultivo = mapper.ToEntidad(dto);
-        return dao.crear(cultivo);
+        boolean exito = dao.crear(cultivo);
+        if (exito) {
+            dto.setIdCultivo(cultivo.getIdCultivo()); 
+        }
+        return exito;
     }
 
     public boolean actualizar(DTOCultivo dto) throws Exception {
@@ -64,5 +68,5 @@ public class CultivoServicio {
         }
         return resultado;
     }
-    
+
 }

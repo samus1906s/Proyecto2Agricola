@@ -21,7 +21,8 @@ public class ControladorCultivo {
     }
 
     public boolean registrarCultivo(DTOCultivo dto) throws Exception {
-        return servicio.registrar(dto);
+        boolean exito = servicio.registrar(dto);
+        return exito;
     }
 
     public boolean actualizarCultivo(DTOCultivo dto) throws Exception {
