@@ -33,7 +33,7 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 /**
  *
- * @author je110
+ * @author samue
  */
 public class IntFrmTablaAlmacen extends javax.swing.JInternalFrame {
 

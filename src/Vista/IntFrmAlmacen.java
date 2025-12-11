@@ -22,7 +22,7 @@ import javax.swing.JDesktopPane;
 import javax.swing.plaf.basic.BasicInternalFrameUI;
 /**
  *
- * @author je110
+ * @author samue
  */
 public class IntFrmAlmacen extends javax.swing.JInternalFrame {
 
