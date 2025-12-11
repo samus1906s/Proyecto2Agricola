@@ -12,12 +12,12 @@ import java.time.LocalDate;
  * @author samue
  */
 public class AlmacenDTO {
-    private final int id;
-    private final int produccionId;
-    private final double cantidadDisponible;
-    private final LocalDate fechaIngreso;
-    private final LocalDate fechaEgreso;
-    private final EstadoAlmacen estado;
+    private int id;
+    private int produccionId;
+    private double cantidadDisponible;
+    private LocalDate fechaIngreso;
+    private LocalDate fechaEgreso;
+    private EstadoAlmacen estado;
 
     public int getId() {
         return id;
@@ -42,8 +42,30 @@ public class AlmacenDTO {
     public EstadoAlmacen getEstado() {
         return estado;
     }
-    
-    
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setProduccionId(int produccionId) {
+        this.produccionId = produccionId;
+    }
+
+    public void setCantidadDisponible(double cantidadDisponible) {
+        this.cantidadDisponible = cantidadDisponible;
+    }
+
+    public void setFechaIngreso(LocalDate fechaIngreso) {
+        this.fechaIngreso = fechaIngreso;
+    }
+
+    public void setFechaEgreso(LocalDate fechaEgreso) {
+        this.fechaEgreso = fechaEgreso;
+    }
+
+    public void setEstado(EstadoAlmacen estado) {
+        this.estado = estado;
+    }
 
     public AlmacenDTO(int id, int produccionId, double cantidadDisponible, LocalDate fechaIngreso, LocalDate fechaEgreso, EstadoAlmacen estado) {
         this.id = id;
@@ -53,6 +75,8 @@ public class AlmacenDTO {
         this.fechaEgreso = fechaEgreso;
         this.estado = estado;
     }
-    
+
+    public AlmacenDTO() {
+    }
     
 }

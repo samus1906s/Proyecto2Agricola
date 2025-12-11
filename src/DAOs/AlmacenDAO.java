@@ -23,8 +23,7 @@ public class AlmacenDAO implements IAlmacenDAO{
     @Override
     public boolean crear(Almacen a) throws SQLException {
          try {
-            String sql = "INSERT INTO almacen (produccionId, cantidadDisponible, fechaIngreso, fechaEgreso, estado) "
-                       + "VALUES (?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO almacen (produccionId, cantidadDisponible, fechaIngreso, fechaEgreso, estado) " + "VALUES (?, ?, ?, ?, ?)";
 
             Connection con = ConexionBD.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
@@ -44,7 +43,6 @@ public class AlmacenDAO implements IAlmacenDAO{
             int rows = ps.executeUpdate();
             ps.close();
             return rows > 0;
-
         } catch (SQLException ex) {
             System.out.println("Error en crear(): " + ex);
             return false;
@@ -125,8 +123,7 @@ public class AlmacenDAO implements IAlmacenDAO{
     @Override
     public boolean actualizar(Almacen a) throws SQLException {
         try {
-            String sql = "UPDATE almacen SET produccionId=?, cantidadDisponible=?, fechaIngreso=?, fechaEgreso=?, estado=? "
-                       + "WHERE id=?";
+            String sql = "UPDATE almacen SET produccionId=?, cantidadDisponible=?, fechaIngreso=?, fechaEgreso=?, estado=? " + "WHERE id=?";
 
             Connection con = ConexionBD.getConnection();
             PreparedStatement ps = con.prepareStatement(sql);
@@ -177,89 +174,80 @@ public class AlmacenDAO implements IAlmacenDAO{
 
     @Override
     public List<Almacen> Buscar(String texto) throws SQLException {
-        
+ 
         List<Almacen> lista = new ArrayList<>();
 
-    try {
-        // Validar que texto sea número
-        int id = Integer.parseInt(texto);
+        try {
+            String sql = "SELECT id,produccionId,cantidadDisponible, fechaIngreso, fechaEgreso, estado FROM almacen WHERE id=?";
 
-        String sql = "SELECT id, produccionId, cantidadDisponible, fechaIngreso, fechaEgreso, estado "
-                   + "FROM almacen WHERE id = ?";
+            Connection con = ConexionBD.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql);
 
-        Connection con = ConexionBD.getConnection();
-        PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, texto + "%");
+            ps.setString(2, texto + "%");
 
-        ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
 
-        ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Almacen a = new Almacen();
+                a.setId(rs.getInt("id"));
+                a.setProduccionId(rs.getInt("produccionId"));
+                a.setCantidadDisponible(rs.getDouble("cantidadDisponible"));
+                a.setFechaIngreso(rs.getDate("fechaIngreso").toLocalDate());
 
-        while (rs.next()) {
+                Date egreso = rs.getDate("fechaEgreso");
+                a.setFechaEgreso(egreso != null ? egreso.toLocalDate() : null);
 
-            Almacen a = new Almacen();
-            a.setId(rs.getInt("id"));
-            a.setProduccionId(rs.getInt("produccionId"));
-            a.setCantidadDisponible(rs.getDouble("cantidadDisponible"));
-            a.setFechaIngreso(rs.getDate("fechaIngreso").toLocalDate());
+                a.setEstado(EstadoAlmacen.valueOf(rs.getString("estado")));
 
-            Date egreso = rs.getDate("fechaEgreso");
-            a.setFechaEgreso(egreso != null ? egreso.toLocalDate() : null);
+                lista.add(a);
+            }
 
-            a.setEstado(EstadoAlmacen.valueOf(rs.getString("estado")));
+            rs.close();
+            ps.close();
 
-            lista.add(a);
+        } catch (SQLException ex) {
+            System.out.println("Error en Buscar(): " + ex);
         }
 
-        rs.close();
-        ps.close();
-
-    } catch (NumberFormatException ex) {
-        System.out.println("ID inválido: " + texto);
-    }
-
-    return lista;
+        return lista;
     }
     
     public List<Almacen> listaPorFechaIngreso(LocalDate fecha) throws SQLException {
-    List<Almacen> lista = new ArrayList<>();
+        List<Almacen> lista = new ArrayList<>();
 
-    try {
-        String sql = "SELECT * FROM almacen WHERE fechaIngreso = ?";
+        try {
+            String sql = "SELECT * FROM almacen WHERE fechaIngreso = ?";
 
-        Connection con = ConexionBD.getConnection();
-        PreparedStatement ps = con.prepareStatement(sql);
+            Connection con = ConexionBD.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql);
 
-        ps.setDate(1, Date.valueOf(fecha));
+            ps.setDate(1, Date.valueOf(fecha));
 
-        ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
-        while (rs.next()) {
+            while (rs.next()) {
 
-            Almacen a = new Almacen();
-            a.setId(rs.getInt("id"));
-            a.setProduccionId(rs.getInt("produccionId"));
-            a.setCantidadDisponible(rs.getDouble("cantidadDisponible"));
-            a.setFechaIngreso(rs.getDate("fechaIngreso").toLocalDate());
+                Almacen a = new Almacen();
+                a.setId(rs.getInt("id"));
+                a.setProduccionId(rs.getInt("produccionId"));
+                a.setCantidadDisponible(rs.getDouble("cantidadDisponible"));
+                a.setFechaIngreso(rs.getDate("fechaIngreso").toLocalDate());
 
-            Date egreso = rs.getDate("fechaEgreso");
-            a.setFechaEgreso(egreso != null ? egreso.toLocalDate() : null);
+                Date egreso = rs.getDate("fechaEgreso");
+                a.setFechaEgreso(egreso != null ? egreso.toLocalDate() : null);
 
-            a.setEstado(EstadoAlmacen.valueOf(rs.getString("estado")));
+                a.setEstado(EstadoAlmacen.valueOf(rs.getString("estado")));
 
-            lista.add(a);
+                lista.add(a);
+            }
+            rs.close();
+            ps.close();
+        } catch (SQLException ex) {
+            System.out.println("Error en listaPorFechaIngreso(): " + ex);
         }
-
-        rs.close();
-        ps.close();
-
-    } catch (SQLException ex) {
-        System.out.println("Error en listaPorFechaIngreso(): " + ex);
+        return lista;
     }
-
-    return lista;
-}
-    
-
 }
     
     

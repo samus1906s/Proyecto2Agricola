@@ -7,6 +7,7 @@ package Controlador;
 import DTOs.AlmacenDTO;
 import Servicios.AlmacenServicio;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,7 +60,7 @@ public class ControladorAlmacen {
 
     for (AlmacenDTO a : lista) {
         if (a.getFechaIngreso() != null) {
-            long diasAlmacen = java.time.temporal.ChronoUnit.DAYS.between(a.getFechaIngreso(), hoy);
+            long diasAlmacen = ChronoUnit.DAYS.between(a.getFechaIngreso(), hoy);
             
             
             if (diasAlmacen < 0) {

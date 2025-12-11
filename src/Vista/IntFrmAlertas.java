@@ -6,10 +6,24 @@ package Vista;
 
 import Controlador.ControladorAlmacen;
 import DTOs.AlmacenDTO;
+import Modelo.EstadoAlmacen;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+import java.beans.PropertyChangeListener;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.SwingConstants;
+import javax.swing.plaf.basic.BasicInternalFrameUI;
+import javax.swing.plaf.basic.BasicScrollBarUI;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 
 /**
  *
@@ -18,103 +32,247 @@ import javax.swing.table.DefaultTableModel;
 public class IntFrmAlertas extends javax.swing.JInternalFrame {
     
     private final ControladorAlmacen controlador;
-    
-    /**
-     * Creates new form IntFrmAlertas
-     */
+ 
     public IntFrmAlertas(ControladorAlmacen controlador) {
         initComponents();
         this.controlador = controlador;
-         cargarAlertas();
+        cargarAlertas();
+        personalizarTabla();
+        personalizarTituloYBorde(); 
     }
     
     private void cargarAlertas() {
-         DefaultTableModel model = (DefaultTableModel) TbtTablaAlmacenAlertas.getModel();
-    model.setRowCount(0);
+        DefaultTableModel model = (DefaultTableModel) tblAlertas.getModel();
+        model.setRowCount(0);
 
-    if (model.getColumnCount() < 8) { 
-        model.setColumnIdentifiers(new Object[]{"ID", "Prod ID", "Cantidad", "F. Ingreso", "F. Egreso", "Días Total", "Días Extra", "Estado"});
-    }
-
-    try {
-        List<AlmacenDTO> lista = controlador.listarAlmacenes();
-        LocalDate hoy = LocalDate.now();
-        int diasLimite = 30; 
-
-        for (AlmacenDTO a : lista) {
-            
-            long diasTotal = 0;
-            
-            System.out.println("Producto ID: " + a.getId() + " | Fecha en DTO: " + a.getFechaIngreso());
-
-            if (a.getFechaIngreso() != null) {
-
-                String fechaStr = a.getFechaIngreso().toString(); 
-                LocalDate fechaIngresoLocal = LocalDate.parse(fechaStr);
-                
-                diasTotal = java.time.temporal.ChronoUnit.DAYS.between(fechaIngresoLocal, hoy);
-            }
-
-            if (diasTotal < 0) diasTotal = 0;
-
-            long diasDeMas = 0;
-            if (diasTotal > diasLimite) {
-                diasDeMas = diasTotal - diasLimite;
-            }
-
-            Object[] fila = new Object[]{
-                a.getId(),
-                a.getProduccionId(),
-                a.getCantidadDisponible(),
-                a.getFechaIngreso(),
-                a.getFechaEgreso(),
-                diasTotal,   
-                diasDeMas,   
-                a.getEstado()
-            };
-
-            model.addRow(fila);
-        }
-
-        TbtTablaAlmacenAlertas.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
-            @Override
-            public java.awt.Component getTableCellRendererComponent(
-                    javax.swing.JTable table, Object value, boolean isSelected,
-                    boolean hasFocus, int row, int column) {
-
-                java.awt.Component c = super.getTableCellRendererComponent(
-                        table, value, isSelected, hasFocus, row, column);
-
-                try {
-                    Object valDias = table.getValueAt(row, 5); 
-                    if (valDias != null) {
-                        long dias = Long.parseLong(valDias.toString());
-                        if (dias > diasLimite) {
-                            c.setBackground(java.awt.Color.RED);
-                            c.setForeground(java.awt.Color.WHITE);
-                        } else {
-                            c.setBackground(java.awt.Color.WHITE);
-                            c.setForeground(java.awt.Color.BLACK);
-                        }
-                    }
-                } catch (Exception ex) { }
-                
-                if (isSelected) {
-                    c.setBackground(table.getSelectionBackground());
-                    c.setForeground(table.getSelectionForeground());
-                }
-                return c;
-            }
+      
+        model.setColumnIdentifiers(new Object[]{
+            "ID", "Prod ID", "Cantidad", "F. Ingreso", "F. Egreso", 
+            "Días Total", "Días Extra", "Tiempo Restante", "Estado"
         });
 
-    } catch (Exception e) {
-        e.printStackTrace();
-        JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        try {
+            List<AlmacenDTO> lista = controlador.listarAlmacenes();
+            LocalDate hoy = LocalDate.now();
+            
+            int diasInicioAlerta = 20; 
+            int diasLimite = 30;       
+
+            for (AlmacenDTO a : lista) {
+                long diasTotal = 0;
+
+                if (a.getFechaIngreso() != null) {
+                    diasTotal = ChronoUnit.DAYS.between(a.getFechaIngreso(), hoy);
+                }
+                if (diasTotal < 0) diasTotal = 0;
+
+                long diasDeMas = (diasTotal > diasLimite) ? (diasTotal - diasLimite) : 0;
+
+                
+                if (a.getEstado() != EstadoAlmacen.DANADO) {
+                    boolean cambio = false;
+                    if (diasTotal > diasLimite) {
+                        if (a.getEstado() != EstadoAlmacen.VENCIDO) {
+                            a.setEstado(EstadoAlmacen.VENCIDO);
+                            cambio = true;
+                        }
+                    } else if (diasTotal >= diasInicioAlerta && diasTotal <= diasLimite) {
+                        if (a.getEstado() != EstadoAlmacen.PROXIMO_A_VENCER) {
+                            a.setEstado(EstadoAlmacen.PROXIMO_A_VENCER);
+                            cambio = true;
+                        }
+                    }
+                    if (cambio) controlador.actualizarAlmacen(a);
+                }
+
+                                String tiempoRestanteStr;
+                    long diasParaVencer = diasLimite - diasTotal;
+
+                   
+                    if (a.getEstado() == EstadoAlmacen.DANADO) {
+                        tiempoRestanteStr = "No Aplica"; // 
+                    } 
+                    else if (a.getEstado() == EstadoAlmacen.VENCIDO) {
+                        tiempoRestanteStr = "Vencido hace " + Math.abs(diasParaVencer) + " días";
+                    }
+                    else if (diasParaVencer > 0) {
+                        tiempoRestanteStr = "Quedan " + diasParaVencer + " días";
+                    } 
+                    else if (diasParaVencer == 0) {
+                        tiempoRestanteStr = "Vence HOY";
+                    } 
+                    else {
+                      
+                        tiempoRestanteStr = "Tiempo agotado";
+                    }
+
+                Object[] fila = new Object[]{
+                    a.getId(), 
+                    a.getProduccionId(), 
+                    a.getCantidadDisponible(), 
+                    a.getFechaIngreso(), 
+                    a.getFechaEgreso(), 
+                    diasTotal, 
+                    diasDeMas,
+                    tiempoRestanteStr, 
+                    a.getEstado() 
+                };
+                model.addRow(fila);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
+    private void personalizarTituloYBorde() {
+        try {
+            BasicInternalFrameUI ui = (BasicInternalFrameUI) this.getUI();
+
+            Color verdeTitulo = new java.awt.Color(232, 245, 233);
+            JComponent titleBar = ui.getNorthPane();
+            titleBar.setBackground(verdeTitulo);
+            titleBar.setOpaque(true);
+
+            this.setBorder(BorderFactory.createLineBorder(new Color(204, 255, 204), 4));
+
+            PropertyChangeListener listener = evt -> {
+                if ("frameType".equals(evt.getPropertyName())) {
+                    this.setForeground(Color.WHITE);
+                }
+            };
+            this.addPropertyChangeListener(listener);
+
+            this.putClientProperty("JInternalFrame.activeTitleForeground", Color.WHITE);
+            this.putClientProperty("JInternalFrame.inactiveTitleForeground", Color.WHITE);
+
+            this.putClientProperty("JInternalFrame.activeTitleBackground", verdeTitulo);
+            this.putClientProperty("JInternalFrame.inactiveTitleBackground", verdeTitulo);
+
+        } catch (Exception e) {
+            System.err.println("Error personalizando título: " + e);
+        }
     }
 
+    private void personalizarTabla() {
+        JTableHeader header = tblAlertas.getTableHeader();
+        header.setBackground(new Color(45, 95, 63));
+        header.setForeground(Color.WHITE);
+        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        header.setOpaque(true);
 
+        tblAlertas.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                
+                // PALETA DE COLORES
+                Color cVencido = new Color(255, 225, 225); 
+                Color cDanado  = new Color(255, 230, 200); 
+                Color cProximo = new Color(255, 250, 200); 
+                Color cBien    = new Color(225, 255, 235); 
+                
+                Color tRojo    = new Color(150, 0, 0);
+                Color tNaranja = new Color(180, 80, 0);
+                Color tAmarillo= new Color(120, 120, 0);
+                Color tVerde   = new Color(0, 102, 51);
 
+                if (!isSelected) {
+                    try {
+                        Object valDias = table.getValueAt(row, 5);
+                        
+                        
+                        String estadoTexto = (table.getValueAt(row, 8) != null) ? table.getValueAt(row, 8).toString() : "";
+                        
+                        long dias = (valDias != null) ? Long.parseLong(valDias.toString()) : 0;
+
+                        switch (estadoTexto) {
+                            case "VENCIDO":
+                                setBackground(cVencido);
+                                setForeground(tRojo);
+                                setFont(getFont().deriveFont(Font.BOLD));
+                                break;
+                                
+                            case "DANADO": 
+                                setBackground(cDanado);
+                                setForeground(tNaranja);
+                                setFont(getFont().deriveFont(Font.BOLD));
+                                if(column == 8) setText("DAÑADO"); 
+                                break;
+                                
+                            case "PROXIMO_A_VENCER":
+                                setBackground(cProximo);
+                                setForeground(tAmarillo);
+                                setFont(getFont().deriveFont(Font.BOLD));
+                                break;
+                                
+                            case "FRESCO":
+                            case "EN_BUEN_ESTADO":
+                                if (dias > 30) {
+                                    setBackground(cVencido); 
+                                    setForeground(tRojo);
+                                    if(column == 8) setText("¡REVISAR! " + value);
+                                } else {
+                                    setBackground(cBien);
+                                    setForeground(tVerde);
+                                    setFont(getFont().deriveFont(Font.PLAIN));
+                                }
+                                break;
+                                
+                            default:
+                                setBackground(Color.WHITE);
+                                setForeground(Color.BLACK);
+                        }
+
+                    } catch (Exception ex) {
+                        setBackground(Color.WHITE);
+                        setForeground(Color.BLACK);
+                    }
+                } else {
+                    setBackground(new Color(200, 230, 201)); 
+                    setForeground(Color.BLACK);
+                }
+                
+                setHorizontalAlignment(SwingConstants.CENTER);
+                setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)));
+                
+                return this;
+            }
+        });
+        
+        tblAlertas.setGridColor(new Color(230, 230, 230));
+        tblAlertas.setShowVerticalLines(true);
+        tblAlertas.setShowHorizontalLines(true);
+        tblAlertas.setRowHeight(30); 
+        tblAlertas.setFillsViewportHeight(true);
+        scpTabla.getViewport().setBackground(Color.WHITE);
+        
+        personalizarScrollBars();
+    }
+    
+    private void personalizarScrollBars() {
+        Color verdeOscuro = new Color(45, 95, 63);
+        Color verdeClaro = new Color(204, 255, 204);
+    
+        scpTabla.getVerticalScrollBar().setUI(
+            new BasicScrollBarUI() {
+            @Override
+            protected void configureScrollBarColors() {
+                this.thumbColor = verdeOscuro;
+                this.trackColor = verdeClaro;
+            }
+        });
+    
+        scpTabla.getHorizontalScrollBar().setUI(
+            new BasicScrollBarUI() {
+            @Override
+            protected void configureScrollBarColors() {
+                this.thumbColor = verdeOscuro;
+                this.trackColor = verdeClaro;
+            }
+        });
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -124,30 +282,28 @@ public class IntFrmAlertas extends javax.swing.JInternalFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        TbtTablaAlmacenAlertas = new javax.swing.JTable();
+        pnlFondo = new javax.swing.JPanel();
+        lblTitulo = new javax.swing.JLabel();
+        scpTabla = new javax.swing.JScrollPane();
+        tblAlertas = new javax.swing.JTable();
 
-        setBackground(new java.awt.Color(0, 255, 153));
-        setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 204, 51), 5));
         setClosable(true);
         setIconifiable(true);
         setMaximizable(true);
+        setResizable(true);
+        setTitle("Alertas");
         setOpaque(true);
 
-        jPanel1.setBackground(new java.awt.Color(0, 153, 102));
+        pnlFondo.setBackground(new java.awt.Color(45, 95, 63));
 
-        jLabel1.setBackground(new java.awt.Color(0, 204, 153));
-        jLabel1.setFont(new java.awt.Font("Bell MT", 1, 24)); // NOI18N
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Grafica.png"))); // NOI18N
-        jLabel1.setText("Productos Almacenados Por Tiempo");
-        jLabel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-        jLabel1.setOpaque(true);
+        lblTitulo.setBackground(new java.awt.Color(45, 95, 63));
+        lblTitulo.setFont(new java.awt.Font("Bell MT", 1, 24)); // NOI18N
+        lblTitulo.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblTitulo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Grafica.png"))); // NOI18N
+        lblTitulo.setText("Productos Almacenados Por Tiempo Prolongado");
+        lblTitulo.setOpaque(true);
 
-        TbtTablaAlmacenAlertas.setBackground(new java.awt.Color(153, 255, 204));
-        TbtTablaAlmacenAlertas.setModel(new javax.swing.table.DefaultTableModel(
+        tblAlertas.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null, null},
                 {null, null, null, null, null, null, null},
@@ -158,44 +314,38 @@ public class IntFrmAlertas extends javax.swing.JInternalFrame {
                 "Id", "ProduccionId", "Cantidad", "FechaIngreso", "FechaEgreso", "Dias en Almacen", "Estado"
             }
         ));
-        jScrollPane1.setViewportView(TbtTablaAlmacenAlertas);
+        scpTabla.setViewportView(tblAlertas);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        javax.swing.GroupLayout pnlFondoLayout = new javax.swing.GroupLayout(pnlFondo);
+        pnlFondo.setLayout(pnlFondoLayout);
+        pnlFondoLayout.setHorizontalGroup(
+            pnlFondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlFondoLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 908, Short.MAX_VALUE)
-                    .addComponent(jScrollPane1))
+                .addGroup(pnlFondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(lblTitulo, javax.swing.GroupLayout.DEFAULT_SIZE, 918, Short.MAX_VALUE)
+                    .addComponent(scpTabla))
                 .addContainerGap())
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        pnlFondoLayout.setVerticalGroup(
+            pnlFondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlFondoLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(lblTitulo, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 305, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(88, Short.MAX_VALUE))
+                .addComponent(scpTabla, javax.swing.GroupLayout.PREFERRED_SIZE, 380, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(39, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+            .addComponent(pnlFondo, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+            .addComponent(pnlFondo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -203,9 +353,9 @@ public class IntFrmAlertas extends javax.swing.JInternalFrame {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JTable TbtTablaAlmacenAlertas;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblTitulo;
+    private javax.swing.JPanel pnlFondo;
+    private javax.swing.JScrollPane scpTabla;
+    private javax.swing.JTable tblAlertas;
     // End of variables declaration//GEN-END:variables
 }

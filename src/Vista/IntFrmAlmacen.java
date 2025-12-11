@@ -9,292 +9,247 @@ import Controlador.ControladorProduccion;
 import DTOs.AlmacenDTO;
 import DTOs.ProduccionDTO;
 import Modelo.EstadoAlmacen;
-import com.toedter.calendar.JDateChooser; 
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.time.LocalDate;
+import java.awt.Color;
+import java.beans.PropertyChangeListener;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JOptionPane;
 import java.time.ZoneId;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-
-
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import javax.swing.JDesktopPane;
+import javax.swing.plaf.basic.BasicInternalFrameUI;
 /**
  *
- * @author samue
+ * @author je110
  */
 public class IntFrmAlmacen extends javax.swing.JInternalFrame {
-    
-    private int idSeleccionado = -1;
+
     private ControladorAlmacen controlador;
-    private AlmacenDTO almacenSeleccionado;
-   
-
-    /**
-     * Creates new form IntFrmAlmacen
-     */
+    private ControladorProduccion controladorProduccion;
+    private boolean modoEdicion = false;
+    private AlmacenDTO almacenActual;
+ 
     public IntFrmAlmacen() {
+        this.controlador = new ControladorAlmacen();
+        this.controladorProduccion = new ControladorProduccion();
         initComponents();
-        controlador = new ControladorAlmacen();
-        almacenSeleccionado = null;
-        cargarTabla();
-        cargarCombos();
+        personalizarTituloYBorde();
+        cargarComboBoxes();
+        limpiarCampos();
     }
     
+    private void cargarComboBoxes() {
 
-    private LocalDate toLocalDate(Date date) {
-        if (date == null) return null;
-        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-    }
+        cbbEstado.setModel(new DefaultComboBoxModel<>(Arrays.stream(EstadoAlmacen.values()).map(Enum::name).toArray(String[]::new)));
 
-   
-    private Date toDate(LocalDate localDate) {
-        if (localDate == null) return null;
-        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-    }
-
-   
-    private void mostrarMensaje(String mensaje, String titulo) {
-        JOptionPane.showMessageDialog(this, mensaje, titulo, JOptionPane.INFORMATION_MESSAGE);
-    }
-
-
-    private void mostrarError(String mensaje, String titulo) {
-        JOptionPane.showMessageDialog(this, mensaje, titulo, JOptionPane.ERROR_MESSAGE);
-    }
-
-
-    private boolean validarRequeridos(JComponent... campos) {
-        for (JComponent c : campos) {
-            if (c instanceof JTextField && ((JTextField) c).getText().trim().isEmpty()) return false;
-            if (c instanceof JComboBox && ((JComboBox<?>) c).getSelectedItem() == null) return false;
-            if (c instanceof JDateChooser && ((JDateChooser) c).getDate() == null) return false;
+        if (cbbEstado.getItemCount() > 0) {
+            cbbEstado.setSelectedIndex(0);
         }
+ 
+        try {
+            List<ProduccionDTO> producciones = controladorProduccion.listarProducciones();
+            DefaultComboBoxModel<String> modelo = new DefaultComboBoxModel<>();
+            
+            for (ProduccionDTO p : producciones) {
+                modelo.addElement(String.valueOf(p.getIdProduccion()));
+            }
+            
+            cbbIDProduccion.setModel(modelo);
+            
+            if (cbbIDProduccion.getItemCount() > 0) {
+                cbbIDProduccion.setSelectedIndex(0);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar producciones: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void guardarAlmacen() {
+        try {
+            if (!validarCampos()) {
+                return;
+            }
+
+            AlmacenDTO dto = crearDTODesdeFormulario();
+            boolean exito;
+            
+            if (modoEdicion) {
+                exito = controlador.actualizarAlmacen(dto);
+                if (exito) {
+                   
+                    mostrarMensajeTemporal("Actualizado");
+                    limpiarCampos();
+                } else {
+                    JOptionPane.showMessageDialog(this, "No se pudo actualizar.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                exito = controlador.registrarAlmacen(dto);
+                if (exito) {
+                    int idGenerado = dto.getId();
+                    txtID.setText(String.valueOf(idGenerado));
+                    
+                   
+                    mostrarMensajeTemporal("Actualizado");
+                    
+                    
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error al registrar.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    
+    private void mostrarMensajeTemporal(String mensaje) {
+        labelCreado.setText(mensaje);
+        labelCreado.setForeground(new Color(0, 102, 0)); 
+        
+        
+        javax.swing.Timer timer = new javax.swing.Timer(3000, new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                labelCreado.setText(""); 
+                ((javax.swing.Timer)e.getSource()).stop(); 
+            }
+        });
+        timer.setRepeats(false); 
+        timer.start();
+    }
+
+    private boolean validarCampos() {
+
+        if (cbbIDProduccion.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(this, "Debe seleccionar una producción", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            cbbIDProduccion.requestFocus();
+            return false;
+        }
+
+        try {
+            double cantidad = Double.parseDouble(txtCantidad.getText().trim());
+            if (cantidad <= 0) {
+                JOptionPane.showMessageDialog(this, "La cantidad debe ser mayor a 0", "Valor inválido", JOptionPane.WARNING_MESSAGE);
+                txtCantidad.requestFocus();
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "La cantidad debe ser un número válido", "Valor inválido", JOptionPane.WARNING_MESSAGE);
+            txtCantidad.requestFocus();
+            return false;
+        }
+
+        if (dtcFechaIngreso.getDate() == null) {
+            JOptionPane.showMessageDialog(this, "La fecha de ingreso es obligatoria", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+
+        if (dtcFechaEgreso.getDate() != null) {
+            if (dtcFechaEgreso.getDate().before(dtcFechaIngreso.getDate())) {
+                JOptionPane.showMessageDialog(this, "La fecha de egreso debe ser posterior a la fecha de ingreso", "Fechas inválidas", JOptionPane.WARNING_MESSAGE);
+                return false;
+            }
+        }
+        
         return true;
     }
 
+    private AlmacenDTO crearDTODesdeFormulario() {
+        AlmacenDTO dto = new AlmacenDTO();
 
-    private void limpiar() {
-        txtId.setText("");
-        txtCantidad.setText("");
-        jDateChooserIngreso.setDate(null);
-        jDateChooserEgreso.setDate(null);
-        ComboBoxProduccion.setSelectedIndex(0);
-        ComboBoxEstado.setSelectedIndex(0);
-        txtBuscar.setText("");
-        almacenSeleccionado = null;
-    }
+        if (modoEdicion && almacenActual != null) {
+            dto.setId(almacenActual.getId());
+        }
 
+        dto.setProduccionId(Integer.parseInt(cbbIDProduccion.getSelectedItem().toString()));
+        dto.setCantidadDisponible(Double.parseDouble(txtCantidad.getText().trim()));
 
-
-    private void guardar() {
+        String estadoSeleccionado = cbbEstado.getSelectedItem().toString();
+        dto.setEstado(EstadoAlmacen.valueOf(estadoSeleccionado));
         
-    if (!validarRequeridos(ComboBoxProduccion, txtCantidad, jDateChooserIngreso, ComboBoxEstado)) {
-        mostrarError("Faltan datos requeridos", "Error");
-        return;
-    }
-
-    try {
-        Object selectedItem = ComboBoxProduccion.getSelectedItem();
-        if (selectedItem == null) {
-            mostrarError("Debe seleccionar una producción válida", "Error");
-            return;
-        }
-        int produccionId = Integer.parseInt(selectedItem.toString());
-
-        
-        double cantidad = Double.parseDouble(txtCantidad.getText());
-        LocalDate fechaIngreso = toLocalDate(jDateChooserIngreso.getDate());
-        LocalDate fechaEgreso = jDateChooserEgreso.getDate() != null 
-                                ? toLocalDate(jDateChooserEgreso.getDate()) 
-                                : null;
-        EstadoAlmacen estado = EstadoAlmacen.valueOf(ComboBoxEstado.getSelectedItem().toString());
-
-       
-        AlmacenDTO dto = new AlmacenDTO(0, produccionId, cantidad, fechaIngreso, fechaEgreso, estado);
-
-        
-        if (controlador.registrarAlmacen(dto)) {
-            mostrarMensaje("Registro agregado correctamente", "Éxito");
-            limpiar();
-            cargarTabla();
-        } else {
-            mostrarError("No se pudo agregar el registro", "Error");
-        }
-
-    } catch (NumberFormatException ex) {
-        mostrarError("Cantidad o ID de producción inválido", "Error");
-    } catch (Exception ex) {
-        mostrarError("Error: " + ex.getMessage(), "Error");
-    }
-    }
-
-
-   private void eliminar() {
-    if (idSeleccionado == -1) {
-        mostrarError("Debe seleccionar un registro para eliminar", "Error");
-        return;
-    }
-
-    try {
-        if (controlador.eliminarAlmacen(idSeleccionado)) {
-            mostrarMensaje("Registro eliminado correctamente", "Éxito");
-            limpiar();
-            cargarTabla();
-            idSeleccionado = -1; 
-        } else {
-            mostrarError("No se pudo eliminar el registro", "Error");
-        }
-
-    } catch (Exception ex) {
-        mostrarError("Error: " + ex.getMessage(), "Error");
-    }
-}
-    
-private void actualizar() {
-   if (idSeleccionado == -1) {
-        mostrarError("Debe seleccionar un registro para modificar", "Error");
-        return;
-    }
-
-    try {
-        int produccionId = Integer.parseInt(ComboBoxProduccion.getSelectedItem().toString());
-        double cantidad = Double.parseDouble(txtCantidad.getText());
-
-        LocalDate fechaIngreso = jDateChooserIngreso.getDate()
-                .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-        LocalDate fechaEgreso = null;
-        if (jDateChooserEgreso.getDate() != null) {
-            fechaEgreso = jDateChooserEgreso.getDate()
-                    .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        }
-
-        EstadoAlmacen estado = EstadoAlmacen.valueOf(
-                ComboBoxEstado.getSelectedItem().toString()
-        );
-
-
-        AlmacenDTO dto = new AlmacenDTO(
-                idSeleccionado,
-                produccionId,
-                cantidad,
-                fechaIngreso,
-                fechaEgreso,
-                estado
-        );
-
+        dto.setFechaIngreso(dtcFechaIngreso.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
   
-        if (controlador.actualizarAlmacen(dto)) {
-            mostrarMensaje("Registro modificado correctamente", "Éxito");
-            limpiar();
-            cargarTabla();
-            idSeleccionado = -1;
+        if (dtcFechaEgreso.getDate() != null) {
+            dto.setFechaEgreso(dtcFechaEgreso.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
         } else {
-            mostrarError("No se pudo modificar el registro", "Error");
+            dto.setFechaEgreso(null);
+        }
+        
+        return dto;
+    }
+
+    public void cargarAlmacenParaEdicion(AlmacenDTO almacen) {
+        this.almacenActual = almacen;
+        this.modoEdicion = true;
+
+        txtID.setText(String.valueOf(almacen.getId()));
+        cbbIDProduccion.setSelectedItem(String.valueOf(almacen.getProduccionId()));
+        txtCantidad.setText(String.valueOf(almacen.getCantidadDisponible()));
+
+        cbbEstado.setSelectedItem(almacen.getEstado().name());
+
+        dtcFechaIngreso.setDate(java.sql.Date.valueOf(almacen.getFechaIngreso()));
+        
+        if (almacen.getFechaEgreso() != null) {
+            dtcFechaEgreso.setDate(java.sql.Date.valueOf(almacen.getFechaEgreso()));
+        } else {
+            dtcFechaEgreso.setDate(null);
         }
 
-    } catch (Exception ex) {
-        mostrarError("Error al modificar: " + ex.getMessage(), "Error");
-    }
-}
-
-
-
-    private void mostrarDatos(AlmacenDTO dto) {
-        almacenSeleccionado = dto;
-        ComboBoxProduccion.setSelectedItem(dto.getProduccionId());
-        txtCantidad.setText(String.valueOf(dto.getCantidadDisponible()));
-        jDateChooserIngreso.setDate(toDate(dto.getFechaIngreso()));
-        jDateChooserEgreso.setDate(dto.getFechaEgreso() != null ? toDate(dto.getFechaEgreso()) : null);
-        ComboBoxEstado.setSelectedItem(dto.getEstado());
+        lblRegistroAlmacen.setText("Editar Almacén");
     }
 
-    private void cargarTabla() {
+    private void limpiarCampos() {
+        txtID.setText("");
+        txtCantidad.setText("");
+        
+        if (cbbIDProduccion.getItemCount() > 0) {
+            cbbIDProduccion.setSelectedIndex(0);
+        }
+        
+        if (cbbEstado.getItemCount() > 0) {
+            cbbEstado.setSelectedIndex(0);
+        }
+        
+        dtcFechaIngreso.setDate(null);
+        dtcFechaEgreso.setDate(null);
+
+        modoEdicion = false;
+        almacenActual = null;
+        lblRegistroAlmacen.setText("Registros de Almacén");
+        
+        cbbIDProduccion.requestFocus();
+    }
+
+    private void personalizarTituloYBorde() {
         try {
-            List<AlmacenDTO> lista = controlador.listarAlmacenes();
-            DefaultTableModel model = (DefaultTableModel) TbtAlmacen.getModel();
-            model.setRowCount(0);
-            for (AlmacenDTO a : lista) {
-                model.addRow(new Object[]{
-                        a.getId(),
-                        a.getProduccionId(),
-                        a.getCantidadDisponible(),
-                        a.getFechaIngreso(),
-                        a.getFechaEgreso(),
-                        a.getEstado()
-                });
-            }
-        } catch (Exception ex) {
-            mostrarError("Error al cargar datos: " + ex.getMessage(), "Error");
+            BasicInternalFrameUI ui = (BasicInternalFrameUI) this.getUI();
+
+            Color verdeTitulo = new Color(232, 245, 233);  
+            JComponent titleBar = ui.getNorthPane();
+            titleBar.setBackground(verdeTitulo);
+            titleBar.setOpaque(true);
+
+            this.setBorder(BorderFactory.createLineBorder(new java.awt.Color(232, 245, 233), 4));
+
+            PropertyChangeListener listener = evt -> {
+                if ("frameType".equals(evt.getPropertyName())) {
+                    this.setForeground(java.awt.Color.WHITE);
+                }
+            };
+            this.addPropertyChangeListener(listener);
+
+            this.putClientProperty("JInternalFrame.activeTitleForeground", Color.WHITE);
+            this.putClientProperty("JInternalFrame.inactiveTitleForeground", Color.WHITE);
+            this.putClientProperty("JInternalFrame.activeTitleBackground", verdeTitulo);
+            this.putClientProperty("JInternalFrame.inactiveTitleBackground", verdeTitulo);
+        } catch (Exception e) {
+            System.err.println("Error personalizando título: " + e);
         }
     }
-
-    private void buscar() {
-           try {
-        String texto = txtBuscar.getText().trim();
-
-
-        if (texto.isEmpty()) {
-            cargarTabla(); 
-            return;
-        }
-
-        List<AlmacenDTO> lista = controlador.buscar(texto);
-
-        DefaultTableModel model = (DefaultTableModel) TbtAlmacen.getModel();
-        model.setRowCount(0);
-
-        for (AlmacenDTO a : lista) {
-            model.addRow(new Object[]{
-                    a.getId(),
-                    a.getProduccionId(),
-                    a.getCantidadDisponible(),
-                    a.getFechaIngreso(),
-                    a.getFechaEgreso(),
-                    a.getEstado()
-            });
-        }
-
-    } catch (Exception ex) {
-        mostrarError("Error al buscar datos: " + ex.getMessage(), "Error");
-    }
-    }
-    
-     private void cargarCombos() {
-
-     ComboBoxEstado.setModel(new DefaultComboBoxModel<>(
-        Arrays.stream(EstadoAlmacen.values())
-              .map(Enum::name)
-              .toArray(String[]::new)
-    ));
-    if (ComboBoxEstado.getItemCount() > 0) {
-        ComboBoxEstado.setSelectedIndex(0);
-    }
-
-    try {
-        List<ProduccionDTO> producciones = new ControladorProduccion().listarProducciones();
-        DefaultComboBoxModel<String> modeloProduccion = new DefaultComboBoxModel<>();
-
-        for (ProduccionDTO p : producciones) {
-            modeloProduccion.addElement(String.valueOf(p.getIdProduccion()));
-        }
-
-        ComboBoxProduccion.setModel(modeloProduccion);
-        if (modeloProduccion.getSize() > 0) {
-            ComboBoxProduccion.setSelectedIndex(0);
-        }
-
-    } catch (Exception ex) {
-        mostrarError("Error al cargar Producciones: " + ex.getMessage(), "Error");
-    }
-}
-     
-   
-
-
-    
-    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -305,533 +260,267 @@ private void actualizar() {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        PanelPrincipal = new javax.swing.JPanel();
-        ALMACEN = new javax.swing.JLabel();
-        REGISTRO = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        ComboBoxProduccion = new javax.swing.JComboBox<>();
-        jLabel2 = new javax.swing.JLabel();
+        btnGrpEstadosCrecimiento = new javax.swing.ButtonGroup();
+        pnlColorFondo = new javax.swing.JPanel();
+        pnlTitulo = new javax.swing.JPanel();
+        lblRegistroAlmacen = new javax.swing.JLabel();
+        pnlInformacionAlmacen = new javax.swing.JPanel();
+        lblID = new javax.swing.JLabel();
+        lblIDProduccion = new javax.swing.JLabel();
+        lblCantidad = new javax.swing.JLabel();
+        lblFechaIngreso = new javax.swing.JLabel();
+        lblFechaEgreso = new javax.swing.JLabel();
+        lblEstado = new javax.swing.JLabel();
+        txtID = new javax.swing.JTextField();
         txtCantidad = new javax.swing.JTextField();
-        jLabel3 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        jDateChooserIngreso = new com.toedter.calendar.JDateChooser();
-        jDateChooserEgreso = new com.toedter.calendar.JDateChooser();
-        jLabel5 = new javax.swing.JLabel();
-        ComboBoxEstado = new javax.swing.JComboBox<>();
-        jLabel6 = new javax.swing.JLabel();
-        txtId = new javax.swing.JTextField();
-        REGISTRO2 = new javax.swing.JPanel();
-        btnGuardar = new javax.swing.JButton();
-        btnEliminar = new javax.swing.JButton();
+        cbbEstado = new javax.swing.JComboBox<>();
+        dtcFechaEgreso = new com.toedter.calendar.JDateChooser();
+        lblHoja = new javax.swing.JLabel();
+        dtcFechaIngreso = new com.toedter.calendar.JDateChooser();
+        cbbIDProduccion = new javax.swing.JComboBox<>();
+        labelCreado = new javax.swing.JLabel();
+        pnlBotones = new javax.swing.JPanel();
         btnLimpiar = new javax.swing.JButton();
-        btnModificar = new javax.swing.JButton();
-        ALMACEN1 = new javax.swing.JLabel();
-        txtBuscar = new javax.swing.JTextField();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        TbtAlmacen = new javax.swing.JTable();
-        btnBuscar = new javax.swing.JButton();
-        btnTablaAlertas = new javax.swing.JButton();
+        btnGuardar = new javax.swing.JButton();
+        btnMostrarTabla = new javax.swing.JButton();
 
-        setBackground(new java.awt.Color(0, 204, 102));
         setClosable(true);
         setIconifiable(true);
         setMaximizable(true);
-        setOpaque(true);
-        addAncestorListener(new javax.swing.event.AncestorListener() {
-            public void ancestorAdded(javax.swing.event.AncestorEvent evt) {
-                formAncestorAdded(evt);
-            }
-            public void ancestorMoved(javax.swing.event.AncestorEvent evt) {
-            }
-            public void ancestorRemoved(javax.swing.event.AncestorEvent evt) {
-            }
-        });
+        setResizable(true);
+        setTitle("Almacén");
+        setVerifyInputWhenFocusTarget(false);
+        setVisible(true);
 
-        PanelPrincipal.setBackground(new java.awt.Color(0, 102, 51));
+        pnlColorFondo.setBackground(new java.awt.Color(45, 95, 63));
 
-        ALMACEN.setBackground(new java.awt.Color(153, 255, 204));
-        ALMACEN.setFont(new java.awt.Font("Bodoni MT", 1, 36)); // NOI18N
-        ALMACEN.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        ALMACEN.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/filtrar.png"))); // NOI18N
-        ALMACEN.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-        ALMACEN.setOpaque(true);
+        pnlTitulo.setBackground(new java.awt.Color(45, 95, 63));
 
-        REGISTRO.setBackground(new java.awt.Color(0, 153, 102));
-        REGISTRO.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
+        lblRegistroAlmacen.setFont(new java.awt.Font("Bell MT", 1, 24)); // NOI18N
+        lblRegistroAlmacen.setForeground(new java.awt.Color(255, 255, 255));
+        lblRegistroAlmacen.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblRegistroAlmacen.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/registro.png"))); // NOI18N
+        lblRegistroAlmacen.setText("Registros de Almacén");
+        pnlTitulo.add(lblRegistroAlmacen);
 
-        jLabel1.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
-        jLabel1.setText("Id:");
+        pnlInformacionAlmacen.setBackground(new java.awt.Color(204, 255, 204));
 
-        ComboBoxProduccion.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
-        ComboBoxProduccion.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
+        lblID.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
+        lblID.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblID.setText("ID:");
 
-        jLabel2.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
-        jLabel2.setText("Cantidad:");
+        lblIDProduccion.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
+        lblIDProduccion.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblIDProduccion.setText("ID Producción:");
 
-        txtCantidad.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
-        txtCantidad.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtCantidad.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-        txtCantidad.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtCantidadActionPerformed(evt);
-            }
-        });
+        lblCantidad.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
+        lblCantidad.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblCantidad.setText("Cantidad:");
 
-        jLabel3.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
-        jLabel3.setText("Fecha Ingreso:");
+        lblFechaIngreso.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
+        lblFechaIngreso.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblFechaIngreso.setText("Fecha Ingreso:");
 
-        jLabel4.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
-        jLabel4.setText("Fecha Egreso:");
+        lblFechaEgreso.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
+        lblFechaEgreso.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblFechaEgreso.setText("Fecha Egreso:");
 
-        jDateChooserIngreso.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
+        lblEstado.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
+        lblEstado.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblEstado.setText("Estado");
 
-        jDateChooserEgreso.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
+        txtID.setEditable(false);
+        txtID.setEnabled(false);
 
-        jLabel5.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
-        jLabel5.setText("Estado:");
+        dtcFechaEgreso.setDateFormatString("dd/MM/yyyy");
 
-        ComboBoxEstado.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
-        ComboBoxEstado.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
+        lblHoja.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblHoja.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Hoja.png"))); // NOI18N
 
-        jLabel6.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
-        jLabel6.setText("Producción:");
+        dtcFechaIngreso.setDateFormatString("dd/MM/yyyy");
 
-        txtId.setEditable(false);
-        txtId.setFont(new java.awt.Font("Bell MT", 1, 18)); // NOI18N
-        txtId.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtId.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-        txtId.setEnabled(false);
-        txtId.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtIdActionPerformed(evt);
-            }
-        });
+        labelCreado.setFont(new java.awt.Font("SansSerif", 1, 16)); // NOI18N
 
-        javax.swing.GroupLayout REGISTROLayout = new javax.swing.GroupLayout(REGISTRO);
-        REGISTRO.setLayout(REGISTROLayout);
-        REGISTROLayout.setHorizontalGroup(
-            REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(REGISTROLayout.createSequentialGroup()
-                .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(REGISTROLayout.createSequentialGroup()
-                        .addGap(40, 40, 40)
-                        .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
-                            .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(REGISTROLayout.createSequentialGroup()
-                                .addGap(23, 23, 23)
-                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                    .addGroup(REGISTROLayout.createSequentialGroup()
-                        .addGap(20, 20, 20)
-                        .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel3)))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, REGISTROLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(10, 10, 10)))
-                .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(REGISTROLayout.createSequentialGroup()
-                        .addGap(7, 7, 7)
-                        .addComponent(jDateChooserIngreso, javax.swing.GroupLayout.DEFAULT_SIZE, 237, Short.MAX_VALUE))
-                    .addGroup(REGISTROLayout.createSequentialGroup()
+        javax.swing.GroupLayout pnlInformacionAlmacenLayout = new javax.swing.GroupLayout(pnlInformacionAlmacen);
+        pnlInformacionAlmacen.setLayout(pnlInformacionAlmacenLayout);
+        pnlInformacionAlmacenLayout.setHorizontalGroup(
+            pnlInformacionAlmacenLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlInformacionAlmacenLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(pnlInformacionAlmacenLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(pnlInformacionAlmacenLayout.createSequentialGroup()
+                        .addComponent(lblID)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jDateChooserEgreso, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, REGISTROLayout.createSequentialGroup()
+                        .addComponent(txtID, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(192, Short.MAX_VALUE))
+                    .addGroup(pnlInformacionAlmacenLayout.createSequentialGroup()
+                        .addGroup(pnlInformacionAlmacenLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(pnlInformacionAlmacenLayout.createSequentialGroup()
+                                .addComponent(lblEstado)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cbbEstado, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(pnlInformacionAlmacenLayout.createSequentialGroup()
+                                .addGroup(pnlInformacionAlmacenLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addGroup(pnlInformacionAlmacenLayout.createSequentialGroup()
+                                        .addComponent(lblIDProduccion)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(cbbIDProduccion, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .addGroup(pnlInformacionAlmacenLayout.createSequentialGroup()
+                                        .addComponent(lblCantidad)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(txtCantidad, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(pnlInformacionAlmacenLayout.createSequentialGroup()
+                                        .addComponent(lblFechaIngreso)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(dtcFechaIngreso, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .addGroup(pnlInformacionAlmacenLayout.createSequentialGroup()
+                                        .addComponent(lblFechaEgreso)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(dtcFechaEgreso, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGap(0, 0, Short.MAX_VALUE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtCantidad))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, REGISTROLayout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(ComboBoxProduccion, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, REGISTROLayout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(ComboBoxEstado, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, REGISTROLayout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtId)))
-                .addContainerGap())
+                        .addComponent(labelCreado)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlInformacionAlmacenLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(lblHoja, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(105, 105, 105))
         );
-        REGISTROLayout.setVerticalGroup(
-            REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(REGISTROLayout.createSequentialGroup()
-                .addContainerGap(26, Short.MAX_VALUE)
-                .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(txtId, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(ComboBoxProduccion, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel6))
-                .addGap(18, 18, 18)
-                .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtCantidad, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jDateChooserIngreso, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jDateChooserEgreso, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(REGISTROLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(ComboBoxEstado, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
+        pnlInformacionAlmacenLayout.setVerticalGroup(
+            pnlInformacionAlmacenLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlInformacionAlmacenLayout.createSequentialGroup()
+                .addComponent(lblHoja, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(32, 32, 32)
+                .addGroup(pnlInformacionAlmacenLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblID)
+                    .addComponent(txtID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(24, 24, 24)
+                .addGroup(pnlInformacionAlmacenLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblIDProduccion)
+                    .addComponent(cbbIDProduccion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(28, 28, 28)
+                .addGroup(pnlInformacionAlmacenLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblCantidad)
+                    .addComponent(txtCantidad, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(25, 25, 25)
+                .addGroup(pnlInformacionAlmacenLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(lblFechaIngreso)
+                    .addComponent(dtcFechaIngreso, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(28, 28, 28)
+                .addGroup(pnlInformacionAlmacenLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(lblFechaEgreso)
+                    .addComponent(dtcFechaEgreso, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(26, 26, 26)
+                .addGroup(pnlInformacionAlmacenLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblEstado)
+                    .addComponent(cbbEstado, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(labelCreado))
+                .addGap(52, 52, 52))
         );
 
-        REGISTRO2.setBackground(new java.awt.Color(0, 153, 102));
-        REGISTRO2.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
+        pnlBotones.setBackground(new java.awt.Color(45, 95, 63));
+        pnlBotones.setLayout(new java.awt.GridLayout(1, 3));
 
-        btnGuardar.setBackground(new java.awt.Color(153, 255, 204));
-        btnGuardar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Guardar.png"))); // NOI18N
-        btnGuardar.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-        btnGuardar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnGuardarActionPerformed(evt);
-            }
-        });
-
-        btnEliminar.setBackground(new java.awt.Color(153, 255, 204));
-        btnEliminar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Eliminar.png"))); // NOI18N
-        btnEliminar.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-        btnEliminar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnEliminarActionPerformed(evt);
-            }
-        });
-
-        btnLimpiar.setBackground(new java.awt.Color(153, 255, 204));
+        btnLimpiar.setBackground(new java.awt.Color(204, 255, 204));
         btnLimpiar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Limpiar.png"))); // NOI18N
-        btnLimpiar.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
         btnLimpiar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnLimpiarActionPerformed(evt);
             }
         });
+        pnlBotones.add(btnLimpiar);
 
-        btnModificar.setBackground(new java.awt.Color(153, 255, 204));
-        btnModificar.setFont(new java.awt.Font("Bell MT", 1, 24)); // NOI18N
-        btnModificar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Refrescar.png"))); // NOI18N
-        btnModificar.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-        btnModificar.addActionListener(new java.awt.event.ActionListener() {
+        btnGuardar.setBackground(new java.awt.Color(204, 255, 204));
+        btnGuardar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Guardar.png"))); // NOI18N
+        btnGuardar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnModificarActionPerformed(evt);
+                btnGuardarActionPerformed(evt);
             }
         });
+        pnlBotones.add(btnGuardar);
 
-        javax.swing.GroupLayout REGISTRO2Layout = new javax.swing.GroupLayout(REGISTRO2);
-        REGISTRO2.setLayout(REGISTRO2Layout);
-        REGISTRO2Layout.setHorizontalGroup(
-            REGISTRO2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(REGISTRO2Layout.createSequentialGroup()
-                .addGap(18, 18, 18)
-                .addGroup(REGISTRO2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnGuardar, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnEliminar, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 43, Short.MAX_VALUE)
-                .addGroup(REGISTRO2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(btnLimpiar, javax.swing.GroupLayout.DEFAULT_SIZE, 161, Short.MAX_VALUE)
-                    .addComponent(btnModificar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(25, 25, 25))
+        btnMostrarTabla.setBackground(new java.awt.Color(204, 255, 204));
+        btnMostrarTabla.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Tabla.png"))); // NOI18N
+        btnMostrarTabla.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnMostrarTablaActionPerformed(evt);
+            }
+        });
+        pnlBotones.add(btnMostrarTabla);
+
+        javax.swing.GroupLayout pnlColorFondoLayout = new javax.swing.GroupLayout(pnlColorFondo);
+        pnlColorFondo.setLayout(pnlColorFondoLayout);
+        pnlColorFondoLayout.setHorizontalGroup(
+            pnlColorFondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlColorFondoLayout.createSequentialGroup()
+                .addGroup(pnlColorFondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(pnlTitulo, javax.swing.GroupLayout.PREFERRED_SIZE, 380, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(pnlColorFondoLayout.createSequentialGroup()
+                        .addGap(31, 31, 31)
+                        .addGroup(pnlColorFondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(pnlInformacionAlmacen, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(pnlBotones, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addContainerGap(8, Short.MAX_VALUE))
         );
-        REGISTRO2Layout.setVerticalGroup(
-            REGISTRO2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, REGISTRO2Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(REGISTRO2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addGroup(REGISTRO2Layout.createSequentialGroup()
-                        .addComponent(btnModificar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(18, 18, 18)
-                        .addComponent(btnLimpiar, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(REGISTRO2Layout.createSequentialGroup()
-                        .addComponent(btnGuardar, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(btnEliminar, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
-        );
-
-        ALMACEN1.setBackground(new java.awt.Color(0, 153, 102));
-        ALMACEN1.setFont(new java.awt.Font("Bodoni MT", 1, 36)); // NOI18N
-        ALMACEN1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        ALMACEN1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Grafica.png"))); // NOI18N
-        ALMACEN1.setText("Gestión de Almacén");
-        ALMACEN1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-        ALMACEN1.setOpaque(true);
-
-        txtBuscar.setBackground(new java.awt.Color(153, 255, 204));
-        txtBuscar.setFont(new java.awt.Font("Bell MT", 1, 24)); // NOI18N
-        txtBuscar.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-        txtBuscar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtBuscarActionPerformed(evt);
-            }
-        });
-
-        TbtAlmacen.setBackground(new java.awt.Color(153, 255, 204));
-        TbtAlmacen.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-        TbtAlmacen.setFont(new java.awt.Font("Bell MT", 0, 14)); // NOI18N
-        TbtAlmacen.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null}
-            },
-            new String [] {
-                "id", "ProduccionId", "Cantidad", "FechaIngreso", "FechaEgreso", "Estado"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.Object.class, java.lang.Object.class, java.lang.Double.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-        });
-        TbtAlmacen.addAncestorListener(new javax.swing.event.AncestorListener() {
-            public void ancestorAdded(javax.swing.event.AncestorEvent evt) {
-                TbtAlmacenAncestorAdded(evt);
-            }
-            public void ancestorMoved(javax.swing.event.AncestorEvent evt) {
-            }
-            public void ancestorRemoved(javax.swing.event.AncestorEvent evt) {
-            }
-        });
-        TbtAlmacen.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                TbtAlmacenMouseClicked(evt);
-            }
-        });
-        jScrollPane1.setViewportView(TbtAlmacen);
-
-        btnBuscar.setBackground(new java.awt.Color(153, 255, 204));
-        btnBuscar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Buscar.png"))); // NOI18N
-        btnBuscar.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-        btnBuscar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnBuscarActionPerformed(evt);
-            }
-        });
-
-        btnTablaAlertas.setBackground(new java.awt.Color(153, 255, 204));
-        btnTablaAlertas.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Tabla.png"))); // NOI18N
-        btnTablaAlertas.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 3));
-        btnTablaAlertas.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnTablaAlertasActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout PanelPrincipalLayout = new javax.swing.GroupLayout(PanelPrincipal);
-        PanelPrincipal.setLayout(PanelPrincipalLayout);
-        PanelPrincipalLayout.setHorizontalGroup(
-            PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, PanelPrincipalLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(ALMACEN1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(PanelPrincipalLayout.createSequentialGroup()
-                        .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(REGISTRO, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(REGISTRO2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(PanelPrincipalLayout.createSequentialGroup()
-                                .addGap(8, 8, 8)
-                                .addComponent(ALMACEN, javax.swing.GroupLayout.PREFERRED_SIZE, 81, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 589, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 9, Short.MAX_VALUE))
-                            .addGroup(PanelPrincipalLayout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jScrollPane1)
-                                    .addGroup(PanelPrincipalLayout.createSequentialGroup()
-                                        .addComponent(btnBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 326, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(btnTablaAlertas, javax.swing.GroupLayout.PREFERRED_SIZE, 326, javax.swing.GroupLayout.PREFERRED_SIZE)))))))
-                .addContainerGap())
-        );
-        PanelPrincipalLayout.setVerticalGroup(
-            PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(PanelPrincipalLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(ALMACEN1, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
+        pnlColorFondoLayout.setVerticalGroup(
+            pnlColorFondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlColorFondoLayout.createSequentialGroup()
+                .addComponent(pnlTitulo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(12, 12, 12)
+                .addComponent(pnlInformacionAlmacen, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(PanelPrincipalLayout.createSequentialGroup()
-                        .addComponent(REGISTRO, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(REGISTRO2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(13, 13, 13))
-                    .addGroup(PanelPrincipalLayout.createSequentialGroup()
-                        .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(txtBuscar)
-                            .addComponent(ALMACEN, javax.swing.GroupLayout.DEFAULT_SIZE, 60, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(PanelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btnBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnTablaAlertas, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 18, 18))))
+                .addComponent(pnlBotones, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(PanelPrincipal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(PanelPrincipal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
-        );
+        getContentPane().add(pnlColorFondo, java.awt.BorderLayout.CENTER);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void txtCantidadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCantidadActionPerformed
-        
-    }//GEN-LAST:event_txtCantidadActionPerformed
-
-    private void btnLimpiarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarActionPerformed
-        limpiar();
-    }//GEN-LAST:event_btnLimpiarActionPerformed
-
-    private void txtBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtBuscarActionPerformed
-        buscar();
-    }//GEN-LAST:event_txtBuscarActionPerformed
-
-    private void formAncestorAdded(javax.swing.event.AncestorEvent evt) {//GEN-FIRST:event_formAncestorAdded
-        // TODO add your handling code here:
-    }//GEN-LAST:event_formAncestorAdded
-
     private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
-        guardar();
+        guardarAlmacen();
     }//GEN-LAST:event_btnGuardarActionPerformed
 
-    private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
-       eliminar();
-    }//GEN-LAST:event_btnEliminarActionPerformed
+    private void btnLimpiarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarActionPerformed
+        limpiarCampos();
+    }//GEN-LAST:event_btnLimpiarActionPerformed
 
-    private void btnBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBuscarActionPerformed
-        buscar();
-    }//GEN-LAST:event_btnBuscarActionPerformed
-
-    private void TbtAlmacenAncestorAdded(javax.swing.event.AncestorEvent evt) {//GEN-FIRST:event_TbtAlmacenAncestorAdded
-       cargarTabla();
-    
-    if (almacenSeleccionado != null) {
-        mostrarDatos(almacenSeleccionado);
-    }
-    }//GEN-LAST:event_TbtAlmacenAncestorAdded
-
-    private void txtIdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtIdActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtIdActionPerformed
-
-    private void TbtAlmacenMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TbtAlmacenMouseClicked
-    int fila = TbtAlmacen.getSelectedRow();
-    if (fila == -1) return;
-
-    idSeleccionado = Integer.parseInt(TbtAlmacen.getValueAt(fila, 0).toString());
-    txtId.setText(String.valueOf(idSeleccionado));
-
-    ComboBoxProduccion.setSelectedItem(
-            TbtAlmacen.getValueAt(fila, 1).toString()
-    );
-
-    txtCantidad.setText(TbtAlmacen.getValueAt(fila, 2).toString());
-
-    try {
-        Object valor = TbtAlmacen.getValueAt(fila, 3);
-        if (valor != null) {
-            java.sql.Date fecha = java.sql.Date.valueOf(valor.toString());
-            jDateChooserIngreso.setDate(fecha);
-        } else {
-            jDateChooserIngreso.setDate(null);
+    private void btnMostrarTablaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMostrarTablaActionPerformed
+        IntFrmTablaAlmacen tabla = new IntFrmTablaAlmacen();
+        
+        JDesktopPane desktop = this.getDesktopPane();
+        if (desktop != null) {
+            desktop.add(tabla);
+            tabla.setVisible(true);
+            tabla.toFront();
         }
-    } catch (Exception e) {
-        jDateChooserIngreso.setDate(null);
-    }
-
-    try {
-        Object valor = TbtAlmacen.getValueAt(fila, 4);
-        if (valor != null) {
-            java.sql.Date fecha = java.sql.Date.valueOf(valor.toString());
-            jDateChooserEgreso.setDate(fecha);
-        } else {
-            jDateChooserEgreso.setDate(null);
-        }
-    } catch (Exception e) {
-        jDateChooserEgreso.setDate(null);
-    }
-
-    ComboBoxEstado.setSelectedItem(
-            TbtAlmacen.getValueAt(fila, 5).toString()
-    );
-    }//GEN-LAST:event_TbtAlmacenMouseClicked
-
-    private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarActionPerformed
-       actualizar();
-    }//GEN-LAST:event_btnModificarActionPerformed
-
-    private void btnTablaAlertasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTablaAlertasActionPerformed
-        try {
-        // Evitar abrir varias veces
-        for (JInternalFrame f : getDesktopPane().getAllFrames()) {
-            if (f instanceof IntFrmAlertas) {
-                f.toFront();
-                f.requestFocus();
-                return;
-            }
-        }
-
-        IntFrmAlertas alertas = new IntFrmAlertas(controlador);
-        getDesktopPane().add(alertas);
-        alertas.setVisible(true);
-
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this, "Error al abrir alertas: " + e.getMessage());
-    }
-    }//GEN-LAST:event_btnTablaAlertasActionPerformed
+    }//GEN-LAST:event_btnMostrarTablaActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel ALMACEN;
-    private javax.swing.JLabel ALMACEN1;
-    private javax.swing.JComboBox<String> ComboBoxEstado;
-    private javax.swing.JComboBox<String> ComboBoxProduccion;
-    private javax.swing.JPanel PanelPrincipal;
-    private javax.swing.JPanel REGISTRO;
-    private javax.swing.JPanel REGISTRO2;
-    private javax.swing.JTable TbtAlmacen;
-    private javax.swing.JButton btnBuscar;
-    private javax.swing.JButton btnEliminar;
+    private javax.swing.ButtonGroup btnGrpEstadosCrecimiento;
     private javax.swing.JButton btnGuardar;
     private javax.swing.JButton btnLimpiar;
-    private javax.swing.JButton btnModificar;
-    private javax.swing.JButton btnTablaAlertas;
-    private com.toedter.calendar.JDateChooser jDateChooserEgreso;
-    private com.toedter.calendar.JDateChooser jDateChooserIngreso;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextField txtBuscar;
+    private javax.swing.JButton btnMostrarTabla;
+    private javax.swing.JComboBox<String> cbbEstado;
+    private javax.swing.JComboBox<String> cbbIDProduccion;
+    private com.toedter.calendar.JDateChooser dtcFechaEgreso;
+    private com.toedter.calendar.JDateChooser dtcFechaIngreso;
+    private javax.swing.JLabel labelCreado;
+    private javax.swing.JLabel lblCantidad;
+    private javax.swing.JLabel lblEstado;
+    private javax.swing.JLabel lblFechaEgreso;
+    private javax.swing.JLabel lblFechaIngreso;
+    private javax.swing.JLabel lblHoja;
+    private javax.swing.JLabel lblID;
+    private javax.swing.JLabel lblIDProduccion;
+    private javax.swing.JLabel lblRegistroAlmacen;
+    private javax.swing.JPanel pnlBotones;
+    private javax.swing.JPanel pnlColorFondo;
+    private javax.swing.JPanel pnlInformacionAlmacen;
+    private javax.swing.JPanel pnlTitulo;
     private javax.swing.JTextField txtCantidad;
-    private javax.swing.JTextField txtId;
+    private javax.swing.JTextField txtID;
     // End of variables declaration//GEN-END:variables
 }

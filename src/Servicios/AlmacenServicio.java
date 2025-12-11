@@ -70,6 +70,4 @@ public class AlmacenServicio {
         }
         return salida;
     }
-    
-    
 }
