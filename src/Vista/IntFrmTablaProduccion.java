@@ -19,10 +19,13 @@ import java.util.Date;
 import java.util.List;
 import static javax.swing.BorderFactory.createLineBorder;
 import javax.swing.JComponent;
+import javax.swing.JDesktopPane;
+import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.RowFilter;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.plaf.basic.BasicInternalFrameUI;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -83,31 +86,41 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
     }
     
     private void cargarDatosTabla() {
-        try {
-            modelo.setRowCount(0);
-            
-            List<ProduccionDTO> producciones = controlador.listarProducciones();
-            
-            if (producciones != null && !producciones.isEmpty()) {
-                for (ProduccionDTO p : producciones) {
-                    Object[] fila = new Object[6];
-                    fila[0] = p.getIdProduccion();
-                    fila[1] = obtenerNombreCultivo(p.getCultivoId());
-                    fila[2] = p.getFecha().toString();
-                    fila[3] = p.getCantidadRecolectada() + " kg";
-                    fila[4] = p.getCalidadProducto();
-                    fila[5] = p.getDestino();
-                    
-                    modelo.addRow(fila);
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "No hay producciones registradas", "Información", JOptionPane.INFORMATION_MESSAGE);
+
+        btnActualizar.setEnabled(false);
+        btnActualizar.setText("Cargando...");
+
+        new Thread(() -> {
+            try {
+                modelo.setRowCount(0);
+                List<ProduccionDTO> producciones = controlador.listarProducciones();
+
+                SwingUtilities.invokeLater(() -> {
+                    if (producciones != null && !producciones.isEmpty()) {
+                        for (ProduccionDTO p : producciones) {
+                            Object[] fila = new Object[6];
+                            fila[0] = p.getIdProduccion();
+                            fila[1] = obtenerNombreCultivo(p.getCultivoId());
+                            fila[2] = p.getFecha().toString();
+                            fila[3] = p.getCantidadRecolectada() + " kg";
+                            fila[4] = p.getCalidadProducto();
+                            fila[5] = p.getDestino();
+                            modelo.addRow(fila);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(this, "No hay producciones registradas", "Información", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                    btnActualizar.setEnabled(true);
+                    btnActualizar.setText("🔄");
+                });        
+            } catch (Exception e) {
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(this, "Error al cargar datos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    btnActualizar.setEnabled(true);
+                    btnActualizar.setText("🔄");
+                });
             }
-            
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error al cargar datos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
-        }
+        }).start();
     }
     
     private String obtenerNombreCultivo(Integer cultivoId) {
@@ -269,6 +282,23 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
                 this.trackColor = verdeClaro;
             }
         });
+    }
+
+    private void actualizarGraficaFormularioPrincipal() {
+        try {
+            JDesktopPane desktop = this.getDesktopPane();
+            if (desktop != null) {
+                for (JInternalFrame frame : desktop.getAllFrames()) {
+                    if (frame instanceof IntFrmProduccion && frame.isVisible()) {
+                        ((IntFrmProduccion) frame).actualizarGrafica();
+                        System.out.println("✅ Gráfica actualizada");
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error al actualizar gráfica: " + e.getMessage());
+        }
     }
     /**
      * This method is called from within the constructor to initialize the form.
@@ -577,41 +607,45 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
 
     private void btnActualizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarActionPerformed
         cargarDatosTabla();
-        
+    
         txtBuscar.setText("");
         cmbCultivo.setSelectedIndex(0);
         cmbDestino.setSelectedIndex(0);
         dtcFecha.setDate(null);
         sorter.setRowFilter(null);
-        
+
+        actualizarGraficaFormularioPrincipal();
+    
         JOptionPane.showMessageDialog(this, "Tabla actualizada correctamente", "Información", JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_btnActualizarActionPerformed
 
     private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
         int filaSeleccionada = tblProduccion.getSelectedRow();
-        
+    
         if (filaSeleccionada == -1) {
             JOptionPane.showMessageDialog(this, "Debe seleccionar una fila para eliminar", "Advertencia", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
+    
         try {
             int filaModelo = tblProduccion.convertRowIndexToModel(filaSeleccionada);
             int id = (int) modelo.getValueAt(filaModelo, 0);
-            
+        
             int confirmacion = JOptionPane.showConfirmDialog(this, "¿Está seguro de eliminar la producción con ID: " + id + "?\n" +"Esta acción no se puede deshacer.", "Confirmar eliminación", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            
+        
             if (confirmacion == JOptionPane.YES_OPTION) {
-                boolean exito = controlador.eliminarProduccion(id);
-                
-                if (exito) {
-                    JOptionPane.showMessageDialog(this, "Registro eliminado correctamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                    cargarDatosTabla();
-                } else {
-                    JOptionPane.showMessageDialog(this, "No se pudo eliminar el registro", "Error", JOptionPane.ERROR_MESSAGE);
-                }
+            boolean exito = controlador.eliminarProduccion(id);
+             
+            if (exito) {
+                JOptionPane.showMessageDialog(this, "Registro eliminado correctamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+ 
+                cargarDatosTabla();
+     
+                actualizarGraficaFormularioPrincipal();                
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo eliminar el registro", "Error", JOptionPane.ERROR_MESSAGE);
             }
-            
+        }        
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error al eliminar: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }

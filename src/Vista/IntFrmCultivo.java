@@ -81,12 +81,13 @@ public class IntFrmCultivo extends javax.swing.JInternalFrame {
         }
 
         try {
+            
             double area = Double.parseDouble(txtArea.getText().trim());
             if (area <= 0) {
                 JOptionPane.showMessageDialog(this, "El área debe ser mayor a 0", "Valor inválido", JOptionPane.WARNING_MESSAGE);
                 txtArea.requestFocus();
                 return false;
-            }
+            }           
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "El área debe ser un número válido", "Valor inválido", JOptionPane.WARNING_MESSAGE);
             txtArea.requestFocus();

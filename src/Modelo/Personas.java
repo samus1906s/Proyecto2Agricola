@@ -36,12 +36,37 @@ public abstract class Personas {
 
     public void setTelefono(String telefono) {
         if (!validarTelefono(telefono))
-            throw new IllegalArgumentException("Teléfono inválido. Formato: 00-00-00-00");
-        this.telefono = telefono;
+            throw new IllegalArgumentException("Teléfono inválido. Debe tener 8 dígitos");
+
+        this.telefono = normalizarTelefono(telefono);
     }
-    
-    public static boolean validarTelefono(String telefono){
-        return telefono.matches("^[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}$");
+
+    public static boolean validarTelefono(String telefono) {
+        if (telefono == null || telefono.trim().isEmpty()) {
+            return false;
+        }
+
+        String telefonoLimpio = telefono.trim().replaceAll("[^0-9-]", "");
+
+        String soloNumeros = telefonoLimpio.replaceAll("-", "");
+ 
+        return soloNumeros.matches("^[0-9]{8}$");
+    }
+
+    public static String normalizarTelefono(String telefono) {
+        if (telefono == null) return "";
+
+        String soloNumeros = telefono.replaceAll("[^0-9]", "");
+  
+        if (soloNumeros.length() == 8) {
+            return String.format("%s-%s-%s-%s", 
+                soloNumeros.substring(0, 2),
+                soloNumeros.substring(2, 4),
+                soloNumeros.substring(4, 6),
+                soloNumeros.substring(6, 8));
+        }
+
+        return telefono;
     }
 
     public void setCorreo(String correo) {
@@ -52,6 +77,14 @@ public abstract class Personas {
     
     public static boolean validarCorreo(String correo){
         return correo.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    }
+
+    public void setTelefonoSinValidar(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public void setCorreoSinValidar(String correo) {
+        this.correo = correo;
     }
 
     public Personas(String cedula, String nombre, String telefono, String correo) {

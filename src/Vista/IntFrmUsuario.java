@@ -4,46 +4,302 @@
  */
 package Vista;
 
+import Controlador.ControladorUsuario;
+import Controlador.SesionUsuario;
+import DTOs.UsuarioDTO;
+import Modelo.EstadoUsuario;
+import Modelo.RolUsuario;
+import java.awt.Color;
+import java.awt.Window;
+import java.beans.PropertyChangeListener;
+import static javax.swing.BorderFactory.createLineBorder;
+import javax.swing.JComponent;
 import javax.swing.JDesktopPane;
-
+import javax.swing.JOptionPane;
+import javax.swing.plaf.basic.BasicInternalFrameUI;
+import javax.swing.SwingUtilities;
 /**
  *
  * @author je110
  */
 public class IntFrmUsuario extends javax.swing.JInternalFrame {
 
-    /**
-     * Creates new form IntFrmUsuario
-     */
+    private ControladorUsuario controlador;
+    private UsuarioDTO usuarioActual;
+    private boolean modoEdicion = false;
+    private boolean esPrimerRegistro = false;
+
     public IntFrmUsuario() {
         initComponents();
         personalizarTituloYBorde();
+        this.controlador = new ControladorUsuario();
+        this.esPrimerRegistro = false;
+        limpiarCampos();
+    }
+
+    private void guardarUsuario() {
+        try {
+            if (!validarCampos()) {
+                return;
+            }
+
+            UsuarioDTO dto = crearDTODesdeFormulario();
+            boolean exito;
+        
+            if (modoEdicion) {
+                String nuevaContrasena = new String(pswContraseña.getPassword());
+            
+                if (!nuevaContrasena.isEmpty()) {
+                    exito = controlador.actualizarUsuarioConContrasena(dto, nuevaContrasena);
+                } else {
+                    exito = controlador.actualizarUsuario(dto);
+                }           
+                if (exito) {
+                    limpiarCampos();
+                } else {
+                    JOptionPane.showMessageDialog(this, "No se pudo actualizar el usuario", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                if (esPrimerRegistro) {
+                    guardarYMostrarLogin();
+                    return;
+                }
+                exito = controlador.registrarUsuario(dto);           
+                if (exito) {
+                    limpiarCampos();
+                } else {
+                    JOptionPane.showMessageDialog(this, "No se pudo registrar el usuario", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }        
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar usuario: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    private boolean validarCampos() {
+
+        String nombreCompleto = txtNombreCompleto.getText().trim();
+        if (nombreCompleto.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El nombre completo es obligatorio", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            txtNombreCompleto.requestFocus();
+            return false;
+        }
+    
+        if (!nombreCompleto.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+")) {
+            JOptionPane.showMessageDialog(this, "El nombre completo solo debe contener letras y espacios", "Nombre inválido", JOptionPane.WARNING_MESSAGE);
+            txtNombreCompleto.requestFocus();
+            return false;
+        }
+
+        String usuario = txtUsuario.getText().trim();
+        if (usuario.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El nombre de usuario es obligatorio", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            txtUsuario.requestFocus();
+            return false;
+        }
+    
+        if (!usuario.matches("[a-zA-Z0-9_]+")) {
+            JOptionPane.showMessageDialog(this, "El usuario solo debe contener letras, números y guiones bajos", "Usuario inválido", JOptionPane.WARNING_MESSAGE);
+            txtUsuario.requestFocus();
+            return false;
+        }
+
+        String email = txtEmail.getText().trim();
+        if (!email.isEmpty()) {
+            if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                JOptionPane.showMessageDialog(this, "Formato de email inválido", "Email inválido", JOptionPane.WARNING_MESSAGE);
+                txtEmail.requestFocus();
+                return false;
+            }
+        }
+
+        String contrasena = new String(pswContraseña.getPassword());
+        String confirmar = new String(pswConfirmar.getPassword());
+
+        if (!modoEdicion) {
+            if (contrasena.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "La contraseña es obligatoria", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+                pswContraseña.requestFocus();
+                return false;
+            }
+    
+            if (contrasena.length() < 6) {
+                JOptionPane.showMessageDialog(this, "La contraseña debe tener al menos 6 caracteres", "Contraseña inválida", JOptionPane.WARNING_MESSAGE);
+                pswContraseña.requestFocus();
+                return false;
+            }
+        }
+
+        if (!contrasena.isEmpty() || !confirmar.isEmpty()) {
+            if (!contrasena.equals(confirmar)) {
+                JOptionPane.showMessageDialog(this, "Las contraseñas no coinciden", "Error de validación", JOptionPane.WARNING_MESSAGE);
+                pswConfirmar.requestFocus();
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private UsuarioDTO crearDTODesdeFormulario() {
+        UsuarioDTO dto = new UsuarioDTO();
+
+        if (modoEdicion && usuarioActual != null) {
+            dto.setId(usuarioActual.getId());
+        }
+
+        dto.setNombreCompleto(txtNombreCompleto.getText().trim());
+        dto.setUsuario(txtUsuario.getText().trim());
+        dto.setEmail(txtEmail.getText().trim());
+
+        String rolTexto = cmbRol.getSelectedItem().toString().toUpperCase();
+        dto.setRol(RolUsuario.valueOf(rolTexto));
+    
+        String contrasena = new String(pswContraseña.getPassword());
+        if (!contrasena.isEmpty()) {
+            dto.setContrasena(contrasena);
+        }
+ 
+        String estadoTexto = cmbEstado.getSelectedItem().toString().toUpperCase();
+        dto.setEstado(EstadoUsuario.valueOf(estadoTexto));
+
+        return dto;
+    }
+
+    public void cargarUsuarioParaEdicion(UsuarioDTO usuario) {
+        this.usuarioActual = usuario;
+        this.modoEdicion = true;
+
+        txtIDUsuario.setText(String.valueOf(usuario.getId()));
+        txtNombreCompleto.setText(usuario.getNombreCompleto());
+        txtUsuario.setText(usuario.getUsuario());
+        txtEmail.setText(usuario.getEmail());
+ 
+        cmbRol.setSelectedItem(usuario.getRol());
+        cmbEstado.setSelectedItem(usuario.getEstado());
+ 
+        pswContraseña.setText("");
+        pswConfirmar.setText("");
+
+        btnRegistrar.setText("Actualizar");
+        lblTitulo.setText("Editar Usuario");
+    }
+
+    private void limpiarCampos() {
+        txtIDUsuario.setText("");
+        txtNombreCompleto.setText("");
+        txtUsuario.setText("");
+        txtEmail.setText("");
+        pswContraseña.setText("");
+        pswConfirmar.setText("");
+ 
+        cmbRol.setSelectedIndex(0);
+        cmbEstado.setSelectedIndex(0);
+
+        if (!esPrimerRegistro) {
+            cmbRol.setEnabled(true);
+            cmbEstado.setEnabled(true);
+        }
+
+        modoEdicion = false;
+        usuarioActual = null;
+        lblTitulo.setText("Registros de Usuarios");
+
+        txtNombreCompleto.requestFocus();
+    }
+
+    public void configurarPrimerRegistro() {
+        this.esPrimerRegistro = true;
+    
+        lblTitulo.setText("Primer Registro");
+    
+        cmbRol.setSelectedItem("ADMINISTRADOR");
+        cmbRol.setEnabled(false);
+    
+        cmbEstado.setSelectedItem("ACTIVO");
+        cmbEstado.setEnabled(false);
+    
+        txtNombreCompleto.requestFocus();
+    }
+
+    private void guardarYMostrarLogin() {
+        try {
+            if (!validarCampos()) {
+                return;
+            }
+
+            UsuarioDTO dto = crearDTODesdeFormulario();
+            dto.setRol(RolUsuario.ADMINISTRADOR);
+            dto.setEstado(EstadoUsuario.ACTIVO);
+        
+            boolean exito = controlador.registrarUsuario(dto);
+        
+            if (exito) {
+                JOptionPane.showMessageDialog(this,"¡Usuario administrador registrado correctamente!\n\n" +"Ahora puede iniciar sesión con sus credenciales.","Registro exitoso",JOptionPane.INFORMATION_MESSAGE);
+            
+                this.dispose();
+            
+                Window[] windows = Window.getWindows();
+                FrmMenuPrincipal menu = null;
+            
+                    for (Window window : windows) {
+                        if (window instanceof FrmMenuPrincipal) {
+                            menu = (FrmMenuPrincipal) window;
+                            break;
+                        }
+                    }           
+                    if (menu != null) {
+                        final FrmMenuPrincipal menuFinal = menu;
+                        SwingUtilities.invokeLater(() -> {
+                        JdlLogin login = new JdlLogin(menuFinal, true);
+                        login.setLocationRelativeTo(menuFinal);
+                        login.setVisible(true);
+                    
+                        if (!SesionUsuario.getInstance().haySesionActiva()) {
+                            System.exit(0);
+                        } else {
+                            menuFinal.inicializarDespuesDeLogin();
+                        }
+                    });
+                }
+            }     
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,"Error al registrar el primer usuario:\n" + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    public void configurarModoNormal() {
+        this.esPrimerRegistro = false;
+        cmbRol.setEnabled(true);
+        cmbEstado.setEnabled(true);
+        lblTitulo.setText("Registros de Usuarios");
     }
 
     private void personalizarTituloYBorde() {
         try {
-            javax.swing.plaf.basic.BasicInternalFrameUI ui = (javax.swing.plaf.basic.BasicInternalFrameUI) this.getUI();
+            BasicInternalFrameUI ui = (BasicInternalFrameUI) this.getUI();
 
-            java.awt.Color verdeTitulo = new java.awt.Color(232, 245, 233);
-            javax.swing.JComponent titleBar = ui.getNorthPane();
+            Color verdeTitulo = new Color(232, 245, 233);
+            JComponent titleBar = ui.getNorthPane();
             titleBar.setBackground(verdeTitulo);
             titleBar.setOpaque(true);
 
-            this.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 255, 204), 4));
+            this.setBorder(createLineBorder(new Color(204, 255, 204), 4));
 
-            java.beans.PropertyChangeListener listener = evt -> {
+            PropertyChangeListener listener = evt -> {
                 if ("frameType".equals(evt.getPropertyName())) {
                     this.setForeground(java.awt.Color.WHITE);
                 }
             };
             this.addPropertyChangeListener(listener);
 
-            this.putClientProperty("JInternalFrame.activeTitleForeground", java.awt.Color.WHITE);
-            this.putClientProperty("JInternalFrame.inactiveTitleForeground", java.awt.Color.WHITE);
+            this.putClientProperty("JInternalFrame.activeTitleForeground", Color.WHITE);
+            this.putClientProperty("JInternalFrame.inactiveTitleForeground", Color.WHITE);
 
             this.putClientProperty("JInternalFrame.activeTitleBackground", verdeTitulo);
             this.putClientProperty("JInternalFrame.inactiveTitleBackground", verdeTitulo);
-
         } catch (Exception e) {
             System.err.println("Error personalizando título: " + e);
         }
@@ -125,7 +381,9 @@ public class IntFrmUsuario extends javax.swing.JInternalFrame {
         lblEstado.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblEstado.setText("Estado:");
 
+        txtIDUsuario.setEditable(false);
         txtIDUsuario.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        txtIDUsuario.setEnabled(false);
 
         txtNombreCompleto.setHorizontalAlignment(javax.swing.JTextField.CENTER);
 
@@ -133,15 +391,13 @@ public class IntFrmUsuario extends javax.swing.JInternalFrame {
 
         txtEmail.setHorizontalAlignment(javax.swing.JTextField.CENTER);
 
-        cmbRol.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbRol.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ADMINISTRADOR", "TRABAJADOR" }));
 
         pswContraseña.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        pswContraseña.setText("jPasswordField1");
 
         pswConfirmar.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        pswConfirmar.setText("jPasswordField2");
 
-        cmbEstado.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmbEstado.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ACTIVO", "INACTIVO" }));
 
         pnlImagen.setBackground(new java.awt.Color(204, 255, 204));
 
@@ -176,18 +432,18 @@ public class IntFrmUsuario extends javax.swing.JInternalFrame {
                             .addGroup(pnlRegistroLayout.createSequentialGroup()
                                 .addComponent(lblNombreCompleto)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtNombreCompleto, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(txtNombreCompleto, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(pnlRegistroLayout.createSequentialGroup()
                                 .addComponent(lblIDUsuario, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(txtIDUsuario, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addContainerGap(162, Short.MAX_VALUE))
                     .addGroup(pnlRegistroLayout.createSequentialGroup()
                         .addGroup(pnlRegistroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(pnlRegistroLayout.createSequentialGroup()
                                 .addComponent(lblRol)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cmbRol, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(cmbRol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(pnlRegistroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                                 .addGroup(pnlRegistroLayout.createSequentialGroup()
                                     .addComponent(lblConfirmar)
@@ -196,16 +452,16 @@ public class IntFrmUsuario extends javax.swing.JInternalFrame {
                                 .addGroup(javax.swing.GroupLayout.Alignment.LEADING, pnlRegistroLayout.createSequentialGroup()
                                     .addComponent(lblContraseña)
                                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(pswContraseña))
-                                .addGroup(pnlRegistroLayout.createSequentialGroup()
-                                    .addComponent(lblEmail)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(txtEmail))
+                                    .addComponent(pswContraseña, javax.swing.GroupLayout.DEFAULT_SIZE, 98, Short.MAX_VALUE))
                                 .addGroup(pnlRegistroLayout.createSequentialGroup()
                                     .addComponent(lblUsuario)
                                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(txtUsuario, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 119, Short.MAX_VALUE)
+                                    .addComponent(txtUsuario)))
+                            .addGroup(pnlRegistroLayout.createSequentialGroup()
+                                .addComponent(lblEmail)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(txtEmail, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(pnlImagen, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(44, 44, 44))))
         );
@@ -262,10 +518,20 @@ public class IntFrmUsuario extends javax.swing.JInternalFrame {
 
         btnLimpiar.setBackground(new java.awt.Color(204, 255, 204));
         btnLimpiar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Limpiar.png"))); // NOI18N
+        btnLimpiar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnLimpiarActionPerformed(evt);
+            }
+        });
         pnlBotones.add(btnLimpiar);
 
         btnRegistrar.setBackground(new java.awt.Color(204, 255, 204));
         btnRegistrar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Guardar.png"))); // NOI18N
+        btnRegistrar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRegistrarActionPerformed(evt);
+            }
+        });
         pnlBotones.add(btnRegistrar);
 
         btnMostrarTabla.setBackground(new java.awt.Color(204, 255, 204));
@@ -282,15 +548,16 @@ public class IntFrmUsuario extends javax.swing.JInternalFrame {
         pnlPrincipalLayout.setHorizontalGroup(
             pnlPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(pnlPrincipalLayout.createSequentialGroup()
-                .addGap(124, 124, 124)
-                .addComponent(lblTitulo)
-                .addGap(0, 97, Short.MAX_VALUE))
-            .addGroup(pnlPrincipalLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(pnlPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(pnlBotones, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(pnlRegistro, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addGroup(pnlPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(pnlPrincipalLayout.createSequentialGroup()
+                        .addGap(124, 124, 124)
+                        .addComponent(lblTitulo))
+                    .addGroup(pnlPrincipalLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(pnlPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(pnlBotones, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(pnlRegistro, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addGap(0, 8, Short.MAX_VALUE))
         );
         pnlPrincipalLayout.setVerticalGroup(
             pnlPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -318,7 +585,7 @@ public class IntFrmUsuario extends javax.swing.JInternalFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnMostrarTablaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMostrarTablaActionPerformed
-         IntFrmTablaUsuarios tabla = new IntFrmTablaUsuarios();
+        IntFrmTablaUsuarios tabla = new IntFrmTablaUsuarios();
 
         JDesktopPane desktop = this.getDesktopPane();
         if (desktop != null) {
@@ -327,6 +594,14 @@ public class IntFrmUsuario extends javax.swing.JInternalFrame {
             tabla.toFront();
         }
     }//GEN-LAST:event_btnMostrarTablaActionPerformed
+
+    private void btnRegistrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegistrarActionPerformed
+        guardarUsuario();
+    }//GEN-LAST:event_btnRegistrarActionPerformed
+
+    private void btnLimpiarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarActionPerformed
+        limpiarCampos();
+    }//GEN-LAST:event_btnLimpiarActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

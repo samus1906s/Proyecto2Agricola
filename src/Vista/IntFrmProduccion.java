@@ -8,6 +8,7 @@ import Controlador.ControladorProduccion;
 import Controlador.ControladorCultivo;
 import DTOs.ProduccionDTO;
 import DTOs.DTOCultivo;
+import Utilidades.ExportadorCSV;
 import Utilidades.GeneradorPDF;
 import Utilidades.GeneradorXML;
 import java.awt.BorderLayout;
@@ -24,6 +25,7 @@ import static javax.swing.BorderFactory.createLineBorder;
 import javax.swing.JComponent;
 import javax.swing.JDesktopPane;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.plaf.basic.BasicInternalFrameUI;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -36,7 +38,7 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
-
+import javax.swing.Timer;
 /**
  *
  * @author je110
@@ -46,7 +48,8 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
     private ControladorProduccion controlador;
     private ControladorCultivo controladorCultivo;
     private List<DTOCultivo> listaCultivos = new java.util.ArrayList<>();
-
+    private Timer timerActualizacion;
+   
     public IntFrmProduccion() {
         this(new ControladorProduccion());
     }
@@ -59,6 +62,37 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
         cargarTabla();
         generarGrafica();
         personalizarTituloYBorde();
+        iniciarActualizacionAutomatica();
+    }
+    
+     private void iniciarActualizacionAutomatica() {
+        
+        timerActualizacion = new Timer(10000, e -> {
+            new Thread(() -> {
+                try {
+                    System.out.println("🔄 Actualizando gráfica automáticamente...");
+ 
+                    SwingUtilities.invokeLater(() -> {
+                        generarGrafica();
+                    });
+                    
+                } catch (Exception ex) {
+                    System.err.println("Error actualizando gráfica: " + ex.getMessage());
+                }
+            }).start();
+        });
+        
+        timerActualizacion.start();
+        System.out.println("✅ Actualización automática de gráfica iniciada (cada 10 seg)");
+    }
+ 
+    @Override
+    public void dispose() {
+        if (timerActualizacion != null) {
+            timerActualizacion.stop();
+            System.out.println("🛑 Actualización automática detenida");
+        }
+        super.dispose();
     }
     
     private void cargarCombos() {
@@ -248,7 +282,23 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
         if (dtcFecha.getDate() == null) {
             throw new Exception("Debe seleccionar una fecha.");
         }
+
         LocalDate fecha = dtcFecha.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate fechaActual = LocalDate.now();
+
+        if (fecha.isAfter(fechaActual)) {
+            throw new Exception("⚠️ La fecha no puede ser futura.\n\n" +"📅 Fecha seleccionada: " + fecha + "\n" +"📅 Fecha actual: " + fechaActual + "\n\n" +"Por favor ingrese una fecha válida (hoy o anterior).");
+        }
+
+        LocalDate fechaMinima = fechaActual.minusYears(5); 
+        if (fecha.isBefore(fechaMinima)) {
+            int respuesta = JOptionPane.showConfirmDialog(this,"⚠️ La fecha seleccionada es de hace más de 5 años.\n\n" +"📅 Fecha: " + fecha + "\n\n" +"¿Está seguro de que es correcta?","Confirmar fecha antigua",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE);
+        
+            if (respuesta != JOptionPane.YES_OPTION) {
+                throw new Exception("Registro cancelado. Verifique la fecha.");
+            }
+        }
+
         dto.setFecha(fecha);
     
         if (cmbCultivoRelacionado.getSelectedItem() == null) {
@@ -335,6 +385,11 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
             JOptionPane.showMessageDialog(this, "Error al cargar datos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+    
+    public void actualizarGrafica() {
+        generarGrafica();
+        System.out.println("🔄 Gráfica regenerada");
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -369,6 +424,7 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
         pnlGrafica = new javax.swing.JPanel();
         btnPDF = new javax.swing.JButton();
         btnXML = new javax.swing.JButton();
+        btnGenerarCSV = new javax.swing.JButton();
         pnlBotones = new javax.swing.JPanel();
         btnLimpiar = new javax.swing.JButton();
         btnRegistrar = new javax.swing.JButton();
@@ -523,11 +579,11 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
         pnlGrafica.setLayout(pnlGraficaLayout);
         pnlGraficaLayout.setHorizontalGroup(
             pnlGraficaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 361, Short.MAX_VALUE)
+            .addGap(0, 470, Short.MAX_VALUE)
         );
         pnlGraficaLayout.setVerticalGroup(
             pnlGraficaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 271, Short.MAX_VALUE)
+            .addGap(0, 283, Short.MAX_VALUE)
         );
 
         scpGrafica.setViewportView(pnlGrafica);
@@ -552,6 +608,15 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
             }
         });
 
+        btnGenerarCSV.setBackground(new java.awt.Color(45, 95, 63));
+        btnGenerarCSV.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
+        btnGenerarCSV.setText("Generar CSV");
+        btnGenerarCSV.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnGenerarCSVActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout pnlInformacionLayout = new javax.swing.GroupLayout(pnlInformacion);
         pnlInformacion.setLayout(pnlInformacionLayout);
         pnlInformacionLayout.setHorizontalGroup(
@@ -562,19 +627,21 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
                         .addGap(15, 15, 15)
                         .addComponent(lblProductividad)
                         .addGap(65, 65, 65)
-                        .addComponent(lblHoja))
+                        .addComponent(lblHoja)
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(pnlInformacionLayout.createSequentialGroup()
                         .addGap(32, 32, 32)
                         .addGroup(pnlInformacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(lblReportes)
                             .addGroup(pnlInformacionLayout.createSequentialGroup()
-                                .addComponent(btnPDF, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 11, Short.MAX_VALUE)
-                                .addComponent(btnXML, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addGap(33, 33, 33))
-            .addGroup(pnlInformacionLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(scpGrafica, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                                .addComponent(btnPDF)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 25, Short.MAX_VALUE)
+                                .addComponent(btnXML)
+                                .addGap(18, 18, 18)
+                                .addComponent(btnGenerarCSV, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addGroup(pnlInformacionLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(scpGrafica, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         pnlInformacionLayout.setVerticalGroup(
@@ -591,7 +658,8 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(pnlInformacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnPDF, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnXML, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnXML, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnGenerarCSV, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(14, 14, 14))
         );
 
@@ -665,7 +733,7 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(pnlPrincipal, javax.swing.GroupLayout.DEFAULT_SIZE, 658, Short.MAX_VALUE)
+            .addComponent(pnlPrincipal, javax.swing.GroupLayout.PREFERRED_SIZE, 658, Short.MAX_VALUE)
         );
 
         pack();
@@ -677,19 +745,19 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
         ProduccionDTO dto = obtenerDTODesdeFormulario();
 
         if (dto.getIdProduccion() != null && dto.getIdProduccion() > 0) {
+            
             boolean exito = controlador.actualizarProduccion(dto);
             
             if (exito) {
-                JOptionPane.showMessageDialog(this, "Producción actualizada correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "✅ ¡Producción actualizada correctamente!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
 
                 limpiarFormulario();
-                cargarTabla();
                 generarGrafica();
             } else {
-                JOptionPane.showMessageDialog(this, "No se pudo actualizar la producción.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "❌ No se pudo actualizar la producción.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else {
-
+            
             int idGenerado = controlador.registrarProduccion(dto);
 
             if (idGenerado == -1) {
@@ -698,22 +766,17 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
             }
 
             if (idGenerado > 0) {
-
                 txtIdCosecha.setText(String.valueOf(idGenerado));
                 
-                
-                
-                cargarTabla();
-                generarGrafica();
+                JOptionPane.showMessageDialog(this, "✅ ¡Producción registrada con éxito!\n📋 ID asignado: " + idGenerado, "Éxito", JOptionPane.INFORMATION_MESSAGE);
 
+                generarGrafica();               
             } else {
-                JOptionPane.showMessageDialog(this, "No se pudo registrar la producción.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "❌ No se pudo registrar la producción.", "Error", JOptionPane.ERROR_MESSAGE);
             }
-        }
-        
+        }      
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "⚠️ Error: " + ex.getMessage(), "Error de Validación", JOptionPane.WARNING_MESSAGE);
         }
     }//GEN-LAST:event_btnRegistrarActionPerformed
 
@@ -756,7 +819,6 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
             boolean exito = GeneradorPDF.generarReporteProducciones(producciones);
         
             if (exito) {
-                JOptionPane.showMessageDialog(this, "Reporte PDF generado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(this, "No se pudo generar el reporte PDF.\n" + "Verifique que la librería iText esté instalada.", "Error", JOptionPane.ERROR_MESSAGE);
             } 
@@ -778,7 +840,6 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
             boolean exito = GeneradorXML.generarReporteProducciones(producciones);
         
             if (exito) {
-                JOptionPane.showMessageDialog(this, "Reporte XML generado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(this, "No se pudo generar el reporte XML.", "Error", JOptionPane.ERROR_MESSAGE);
             }       
@@ -787,6 +848,21 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
             e.printStackTrace();
         }
     }//GEN-LAST:event_btnXMLActionPerformed
+
+    private void btnGenerarCSVActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerarCSVActionPerformed
+        try {
+            List<ProduccionDTO> producciones = controlador.listarProducciones();
+        
+            if (producciones == null || producciones.isEmpty()) {
+                JOptionPane.showMessageDialog(this,"No hay producciones para exportar","Advertencia",JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        
+            ExportadorCSV.exportarProducciones(producciones);       
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,"Error al exportar CSV: " + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_btnGenerarCSVActionPerformed
 
     private void limpiarFormulario() {
         txtIdCosecha.setText("");  
@@ -805,6 +881,7 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnGenerarCSV;
     private javax.swing.JButton btnLimpiar;
     private javax.swing.JButton btnMostrarTabla;
     private javax.swing.JButton btnPDF;

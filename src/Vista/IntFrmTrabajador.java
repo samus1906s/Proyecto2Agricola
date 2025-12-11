@@ -58,7 +58,6 @@ public class IntFrmTrabajador extends javax.swing.JInternalFrame {
             if (modoEdicion) {
                 exito = controlador.actualizarTrabajador(dto);
                 if (exito) {
-                    JOptionPane.showMessageDialog(this, "✅ ¡Trabajador actualizado correctamente!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                     limpiarCampos();
                 } else {
                     JOptionPane.showMessageDialog(this, "❌ No se pudo actualizar el trabajador.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -68,8 +67,6 @@ public class IntFrmTrabajador extends javax.swing.JInternalFrame {
                 if (exito) {
                     int idGenerado = dto.getIdTrabajador();
                     txtIDTrabajador.setText(String.valueOf(idGenerado));
-                    
-                    JOptionPane.showMessageDialog(this, "✅ ¡Trabajador registrado con éxito!\n" +"📋 ID asignado: " + idGenerado, "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     JOptionPane.showMessageDialog(this, "❌ Error al registrar el trabajador.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -86,6 +83,13 @@ public class IntFrmTrabajador extends javax.swing.JInternalFrame {
 
         if (txtCedula.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "La cédula es obligatoria", "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            txtCedula.requestFocus();
+            return false;
+        }
+        
+        String cedula = txtCedula.getText().trim();
+        if (!cedula.matches("[0-9]+")) {
+            JOptionPane.showMessageDialog(this, "La cédula solo debe contener números", "Formato inválido", JOptionPane.WARNING_MESSAGE);
             txtCedula.requestFocus();
             return false;
         }
