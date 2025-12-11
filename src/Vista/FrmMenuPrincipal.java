@@ -4,9 +4,17 @@
  */
 package Vista;
 
+import Controlador.ControladorUsuario;
+import Controlador.SesionUsuario;
+import DTOs.UsuarioDTO;
+import Modelo.RolUsuario;
+import java.awt.Color;
 import java.awt.Image;
 import javax.swing.ImageIcon;
 import javax.swing.JInternalFrame;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 
 /**
  *
@@ -15,22 +23,23 @@ import javax.swing.JInternalFrame;
 public class FrmMenuPrincipal extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmMenuPrincipal.class.getName());
-    /**
-     * Creates new form FrmMenuPrincipal
-     */
+
     public FrmMenuPrincipal() {
         initComponents();
         DesktopPane.setLayer(pnlLabelFondo, Integer.MIN_VALUE);
         ajustarImagenFondo();
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+    }
+
+    public void inicializarDespuesDeLogin() {
+        configurarAccesoPorRol();
+        actualizarInfoUsuario();
     }
     
     private void ajustarImagenFondo() {
         ImageIcon imagenOriginal = new ImageIcon(getClass().getResource("/Icons/ProduccionAgricola.jpg"));
-        Image imagenEscalada = imagenOriginal.getImage().getScaledInstance(
-            DesktopPane.getWidth(),
-            DesktopPane.getHeight(),
-            Image.SCALE_AREA_AVERAGING
-        );
+        Image imagenEscalada = imagenOriginal.getImage().getScaledInstance(DesktopPane.getWidth(),DesktopPane.getHeight(),Image.SCALE_AREA_AVERAGING);
         lblFondo.setIcon(new ImageIcon(imagenEscalada));
     }
 
@@ -46,6 +55,77 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         }
     }
 
+    private void configurarAccesoPorRol() {
+        SesionUsuario sesion = SesionUsuario.getInstance();
+    
+        if (!sesion.haySesionActiva()) {
+            JOptionPane.showMessageDialog(this,"No hay sesión activa. El sistema se cerrará.","Error",JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
+            return;
+        }
+    
+        UsuarioDTO usuario = sesion.getUsuarioActual();
+    
+        if (usuario.getRol() == RolUsuario.TRABAJADOR) {
+
+            mnTrabajadores.setEnabled(false);
+            mnUsuarios.setEnabled(false);
+
+            mnTrabajadores.setForeground(Color.GRAY);
+            mnUsuarios.setForeground(Color.GRAY);
+
+            mnTrabajadores.setToolTipText("⚠️ Acceso restringido - Solo Administradores");
+            mnUsuarios.setToolTipText("⚠️ Acceso restringido - Solo Administradores");
+        
+            System.out.println("✓ Acceso configurado para TRABAJADOR: " + usuario.getNombreCompleto()); 
+        } else if (usuario.getRol() == RolUsuario.ADMINISTRADOR) {
+
+            mnTrabajadores.setEnabled(true);
+            mnUsuarios.setEnabled(true);
+        
+            System.out.println("✓ Acceso configurado para ADMINISTRADOR: " + usuario.getNombreCompleto());
+        }
+    }
+
+    private void actualizarInfoUsuario() {
+        SesionUsuario sesion = SesionUsuario.getInstance();
+        UsuarioDTO usuario = sesion.getUsuarioActual();
+    
+        if (usuario != null) {
+            String textoUsuario = "👤 " + usuario.getNombreCompleto() + " (" + usuario.getRol().name() + ")";InfoUsuario.setText(textoUsuario);
+        }
+    }  
+
+    private void cerrarSesion() {
+        int confirmacion = JOptionPane.showConfirmDialog(this,"¿Está seguro que desea cerrar sesión?","Confirmar cierre de sesión",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);
+    
+        if (confirmacion == JOptionPane.YES_OPTION) {
+
+            SesionUsuario.getInstance().cerrarSesion();
+        
+            this.dispose();
+        
+            SwingUtilities.invokeLater(() -> {
+                JdlLogin login = new JdlLogin(null, true);
+                login.setVisible(true);
+
+                if (!SesionUsuario.getInstance().haySesionActiva()) {
+                    System.exit(0);
+                } else {
+                    new FrmMenuPrincipal().setVisible(true);
+                }
+            });
+        }
+    }
+
+    private void salirSistema() {
+        int confirmacion = JOptionPane.showConfirmDialog(this,"¿Está seguro que desea salir del sistema?","Confirmar salida",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);
+    
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            SesionUsuario.getInstance().cerrarSesion();
+            System.exit(0);
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -65,6 +145,10 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         mnProduccion = new javax.swing.JMenuItem();
         mnAlmacen = new javax.swing.JMenuItem();
         mnUsuarios = new javax.swing.JMenuItem();
+        mnPerfil = new javax.swing.JMenu();
+        InfoUsuario = new javax.swing.JMenuItem();
+        mnCerrarSesion = new javax.swing.JMenuItem();
+        mnSalirSistema = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -94,12 +178,14 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         );
 
         mnSistemaProducciónAgricola.setText("Sistema de Producción Agricola");
+        mnSistemaProducciónAgricola.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
         mnSistemaProducciónAgricola.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 mnSistemaProducciónAgricolaActionPerformed(evt);
             }
         });
 
+        mnCultivos.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
         mnCultivos.setText("Cultivos");
         mnCultivos.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -108,9 +194,16 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         });
         mnSistemaProducciónAgricola.add(mnCultivos);
 
+        mnTrabajadores.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
         mnTrabajadores.setText("Trabajadores");
+        mnTrabajadores.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnTrabajadoresActionPerformed(evt);
+            }
+        });
         mnSistemaProducciónAgricola.add(mnTrabajadores);
 
+        mnProduccion.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
         mnProduccion.setText("Producción");
         mnProduccion.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -119,6 +212,7 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         });
         mnSistemaProducciónAgricola.add(mnProduccion);
 
+        mnAlmacen.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
         mnAlmacen.setText("Almacen");
         mnAlmacen.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -127,6 +221,7 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         });
         mnSistemaProducciónAgricola.add(mnAlmacen);
 
+        mnUsuarios.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
         mnUsuarios.setText("Usuarios");
         mnUsuarios.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -136,6 +231,33 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         mnSistemaProducciónAgricola.add(mnUsuarios);
 
         mnbarraSistema.add(mnSistemaProducciónAgricola);
+
+        mnPerfil.setText("Perfil");
+        mnPerfil.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
+
+        InfoUsuario.setText("Usuario");
+        InfoUsuario.setEnabled(false);
+        mnPerfil.add(InfoUsuario);
+
+        mnCerrarSesion.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
+        mnCerrarSesion.setText("Cerrar Sesión");
+        mnCerrarSesion.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnCerrarSesionActionPerformed(evt);
+            }
+        });
+        mnPerfil.add(mnCerrarSesion);
+
+        mnSalirSistema.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
+        mnSalirSistema.setText("Salir del Sistema");
+        mnSalirSistema.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mnSalirSistemaActionPerformed(evt);
+            }
+        });
+        mnPerfil.add(mnSalirSistema);
+
+        mnbarraSistema.add(mnPerfil);
 
         setJMenuBar(mnbarraSistema);
 
@@ -154,7 +276,7 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void mnCultivosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnCultivosActionPerformed
-        IntFrmCultivos internalFrameCultivo = new IntFrmCultivos();
+        IntFrmCultivo internalFrameCultivo = new IntFrmCultivo();
         DesktopPane.add(internalFrameCultivo);
         internalFrameCultivo.setVisible(true);
     }//GEN-LAST:event_mnCultivosActionPerformed
@@ -176,7 +298,7 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_mnUsuariosActionPerformed
 
     private void mnSistemaProducciónAgricolaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnSistemaProducciónAgricolaActionPerformed
-        // TODO add your handling code here:
+        
     }//GEN-LAST:event_mnSistemaProducciónAgricolaActionPerformed
 
     private void mnAlmacenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnAlmacenActionPerformed
@@ -184,6 +306,20 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
         DesktopPane.add(internalFrameAlmacen);
         internalFrameAlmacen.setVisible(true);
     }//GEN-LAST:event_mnAlmacenActionPerformed
+
+    private void mnCerrarSesionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnCerrarSesionActionPerformed
+        cerrarSesion();
+    }//GEN-LAST:event_mnCerrarSesionActionPerformed
+
+    private void mnSalirSistemaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnSalirSistemaActionPerformed
+        salirSistema();
+    }//GEN-LAST:event_mnSalirSistemaActionPerformed
+
+    private void mnTrabajadoresActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnTrabajadoresActionPerformed
+        IntFrmTrabajador internalFrameTrabajador = new IntFrmTrabajador();
+        DesktopPane.add(internalFrameTrabajador);
+        internalFrameTrabajador.setVisible(true);
+    }//GEN-LAST:event_mnTrabajadoresActionPerformed
 
     /**
      * @param args the command line arguments
@@ -205,17 +341,81 @@ public class FrmMenuPrincipal extends javax.swing.JFrame {
             logger.log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
+ try {
+        for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+            if ("Nimbus".equals(info.getName())) {
+                javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                break;
+            }
+        }
+    } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
+        logger.log(java.util.logging.Level.SEVERE, null, ex);
+    }
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new FrmMenuPrincipal().setVisible(true));
+    /* Create and display the form */
+    java.awt.EventQueue.invokeLater(() -> {
+        FrmMenuPrincipal menu = new FrmMenuPrincipal();
+        menu.setVisible(true);
+        
+        try {
+            Thread.sleep(300);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        try {
+
+            Controlador.ControladorUsuario controlador = new Controlador.ControladorUsuario();
+            boolean hayUsuarios = controlador.existenUsuarios();
+            
+            if (!hayUsuarios) {
+                JOptionPane.showMessageDialog(menu,
+                    "No hay usuarios registrados en el sistema.\n" +
+                    "Por favor, registre al menos un usuario administrador.",
+                    "Primer uso del sistema",
+                    JOptionPane.INFORMATION_MESSAGE);
+                
+                IntFrmUsuario frmRegistro = new IntFrmUsuario();
+                frmRegistro.configurarPrimerRegistro();
+                menu.abrirVentana(frmRegistro);
+                
+            } else {
+                JdlLogin login = new JdlLogin(menu, true);
+                login.setLocationRelativeTo(menu);
+                login.setVisible(true);
+                
+                if (!Controlador.SesionUsuario.getInstance().haySesionActiva()) {
+                    JOptionPane.showMessageDialog(menu,
+                        "No hay sesión activa. El sistema se cerrará.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    System.exit(0);
+                } else {
+                    menu.inicializarDespuesDeLogin();
+                }
+            }
+            
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(menu,
+                "Error al verificar usuarios: " + ex.getMessage(),
+                "Error de sistema",
+                JOptionPane.ERROR_MESSAGE);
+            logger.log(java.util.logging.Level.SEVERE, "Error verificando usuarios", ex);
+            System.exit(1);
+        }
+    });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JDesktopPane DesktopPane;
+    private javax.swing.JMenuItem InfoUsuario;
     private javax.swing.JLabel lblFondo;
     private javax.swing.JMenuItem mnAlmacen;
+    private javax.swing.JMenuItem mnCerrarSesion;
     private javax.swing.JMenuItem mnCultivos;
+    private javax.swing.JMenu mnPerfil;
     private javax.swing.JMenuItem mnProduccion;
+    private javax.swing.JMenuItem mnSalirSistema;
     private javax.swing.JMenu mnSistemaProducciónAgricola;
     private javax.swing.JMenuItem mnTrabajadores;
     private javax.swing.JMenuItem mnUsuarios;

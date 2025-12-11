@@ -9,15 +9,25 @@ import Controlador.ControladorCultivo;
 import DTOs.ProduccionDTO;
 import DTOs.DTOCultivo;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+import java.beans.PropertyChangeListener;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import static javax.swing.BorderFactory.createLineBorder;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
 import javax.swing.RowFilter;
+import javax.swing.SwingConstants;
+import javax.swing.plaf.basic.BasicInternalFrameUI;
+import javax.swing.plaf.basic.BasicScrollBarUI;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 /**
  *
@@ -29,9 +39,7 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
     private ControladorCultivo controladorCultivo;
     private TableRowSorter<DefaultTableModel> sorter;
     private DefaultTableModel modelo;
-    /**
-     * Creates new form IntFrmTablaProduccion
-     */
+
     public IntFrmTablaProduccion(ControladorProduccion controlador, ControladorCultivo controladorCultivo) {
         this.controlador = controlador;
         this.controladorCultivo = controladorCultivo;
@@ -107,8 +115,7 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
             if (cultivoId == null) return "Desconocido";
             
             DTOCultivo cultivo = controladorCultivo.obtenerCultivo(cultivoId);
-            return cultivo != null ? cultivo.getNombre() : "Cultivo #" + cultivoId;
-            
+            return cultivo != null ? cultivo.getNombre() : "Cultivo #" + cultivoId;            
         } catch (Exception e) {
             return "Error";
         }
@@ -162,24 +169,24 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
     
     private void personalizarTituloYBorde() {
         try {
-            javax.swing.plaf.basic.BasicInternalFrameUI ui = (javax.swing.plaf.basic.BasicInternalFrameUI) this.getUI();
+            BasicInternalFrameUI ui = (BasicInternalFrameUI) this.getUI();
 
-            Color verdeTitulo = new java.awt.Color(232, 245, 233);
+            Color verdeTitulo = new Color(232, 245, 233);
             JComponent titleBar = ui.getNorthPane();
             titleBar.setBackground(verdeTitulo);
             titleBar.setOpaque(true);
 
-            this.setBorder(javax.swing.BorderFactory.createLineBorder(new Color(204, 255, 204), 4));
+            this.setBorder(createLineBorder(new Color(204, 255, 204), 4));
 
-            java.beans.PropertyChangeListener listener = evt -> {
+            PropertyChangeListener listener = evt -> {
                 if ("frameType".equals(evt.getPropertyName())) {
                     this.setForeground(Color.WHITE);
                 }
             };
             this.addPropertyChangeListener(listener);
 
-            this.putClientProperty("JInternalFrame.activeTitleForeground", java.awt.Color.WHITE);
-            this.putClientProperty("JInternalFrame.inactiveTitleForeground", java.awt.Color.WHITE);
+            this.putClientProperty("JInternalFrame.activeTitleForeground", Color.WHITE);
+            this.putClientProperty("JInternalFrame.inactiveTitleForeground", Color.WHITE);
 
             this.putClientProperty("JInternalFrame.activeTitleBackground", verdeTitulo);
             this.putClientProperty("JInternalFrame.inactiveTitleBackground", verdeTitulo);
@@ -191,24 +198,23 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
 
     private void personalizarTabla() {
        
-        javax.swing.table.JTableHeader header = tblProduccion.getTableHeader();
-        header.setBackground(new java.awt.Color(45, 95, 63));
-        header.setForeground(new java.awt.Color(0, 0, 0)); 
-        header.setFont(new java.awt.Font("Bell MT", java.awt.Font.BOLD, 14));
+        JTableHeader header = tblProduccion.getTableHeader();
+        header.setBackground(new Color(45, 95, 63));
+        header.setForeground(new Color(0, 0, 0)); 
+        header.setFont(new Font("Bell MT", Font.BOLD, 14));
         header.setOpaque(true);
 
-        header.setDefaultRenderer(new javax.swing.table.DefaultTableCellRenderer() {
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
             @Override
-            public java.awt.Component getTableCellRendererComponent(javax.swing.JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             
-                setBackground(new java.awt.Color(45, 95, 63));
-                setForeground(new java.awt.Color(0, 0, 0)); 
-                setFont(new java.awt.Font("Bell MT", java.awt.Font.BOLD, 14));
-                setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-                setBorder(javax.swing.BorderFactory.createLineBorder(
-                new java.awt.Color(0, 0, 0), 1));
+                setBackground(new Color(45, 95, 63));
+                setForeground(new Color(0, 0, 0)); 
+                setFont(new java.awt.Font("Bell MT", Font.BOLD, 14));
+                setHorizontalAlignment(SwingConstants.CENTER);
+                setBorder(createLineBorder(new Color(0, 0, 0), 1));
             
                 return this;
             }
@@ -216,39 +222,39 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
     
         tblProduccion.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
             @Override
-            public java.awt.Component getTableCellRendererComponent( javax.swing.JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            
+            public Component getTableCellRendererComponent( JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+           
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             
                 if (isSelected) {
-                    setBackground(new java.awt.Color(144, 238, 144));
-                    setForeground(new java.awt.Color(0, 0, 0));
+                    setBackground(new Color(144, 238, 144));
+                    setForeground(new Color(0, 0, 0));
                 } else {
-                    setBackground(new java.awt.Color(204, 255, 204));
-                    setForeground(new java.awt.Color(0, 0, 0));
+                    setBackground(new Color(204, 255, 204));
+                    setForeground(new Color(0, 0, 0));
                 }
             
-                setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+                setHorizontalAlignment(SwingConstants.CENTER);
             
                 return this;
             }
         });
     
-        tblProduccion.setGridColor(new java.awt.Color(45, 95, 63));
+        tblProduccion.setGridColor(new Color(45, 95, 63));
         tblProduccion.setShowGrid(true);
         tblProduccion.setRowHeight(30);
         tblProduccion.setFillsViewportHeight(true);
     
-        scpTabla.getViewport().setBackground(new java.awt.Color(204, 255, 204));
+        scpTabla.getViewport().setBackground(new Color(204, 255, 204));
     
         personalizarScrollBars();
     }
 
     private void personalizarScrollBars() {
-        java.awt.Color verdeOscuro = new java.awt.Color(45, 95, 63);
-        java.awt.Color verdeClaro = new java.awt.Color(204, 255, 204);
+        Color verdeOscuro = new Color(45, 95, 63);
+        Color verdeClaro = new Color(204, 255, 204);
     
-        scpTabla.getVerticalScrollBar().setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+        scpTabla.getVerticalScrollBar().setUI(new BasicScrollBarUI() {
             @Override
             protected void configureScrollBarColors() {
                 this.thumbColor = verdeOscuro;
@@ -256,7 +262,7 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
             }
         });
     
-        scpTabla.getHorizontalScrollBar().setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+        scpTabla.getHorizontalScrollBar().setUI(new BasicScrollBarUI() {
             @Override
             protected void configureScrollBarColors() {
                 this.thumbColor = verdeOscuro;
@@ -317,11 +323,11 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlTituloLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(lblTitulo)
-                .addGap(187, 187, 187))
+                .addGap(259, 259, 259))
         );
         pnlTituloLayout.setVerticalGroup(
             pnlTituloLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(lblTitulo)
+            .addComponent(lblTitulo, javax.swing.GroupLayout.Alignment.TRAILING)
         );
 
         pnlBarraBusqueda.setBackground(new java.awt.Color(45, 95, 63));
@@ -365,7 +371,6 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
         lblCultivo.setText("Cultivo:");
 
         cmbCultivo.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
-        cmbCultivo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         cmbCultivo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmbCultivoActionPerformed(evt);
@@ -377,7 +382,6 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
         lblDestino.setText("Destino:");
 
         cmbDestino.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
-        cmbDestino.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         cmbDestino.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmbDestinoActionPerformed(evt);
@@ -460,7 +464,7 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
         pnlBotones.add(btnEliminar);
 
         btnCancelar.setBackground(new java.awt.Color(204, 255, 204));
-        btnCancelar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/Cancelar.png"))); // NOI18N
+        btnCancelar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Icons/salir.png"))); // NOI18N
         btnCancelar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnCancelarActionPerformed(evt);
@@ -506,7 +510,7 @@ public class IntFrmTablaProduccion extends javax.swing.JInternalFrame {
                     .addGroup(pnlPrincipalLayout.createSequentialGroup()
                         .addComponent(pnlFiltros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(scpTabla, javax.swing.GroupLayout.DEFAULT_SIZE, 499, Short.MAX_VALUE))
+                        .addComponent(scpTabla, javax.swing.GroupLayout.DEFAULT_SIZE, 853, Short.MAX_VALUE))
                     .addComponent(pnlBotones, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );

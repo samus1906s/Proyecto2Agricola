@@ -11,17 +11,30 @@ import DTOs.DTOCultivo;
 import Utilidades.GeneradorPDF;
 import Utilidades.GeneradorXML;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.beans.PropertyChangeListener;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
+import static javax.swing.BorderFactory.createLineBorder;
+import javax.swing.JComponent;
 import javax.swing.JDesktopPane;
 import javax.swing.JOptionPane;
+import javax.swing.plaf.basic.BasicInternalFrameUI;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import static org.jfree.chart.axis.NumberAxis.createIntegerTickUnits;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.labels.StandardCategoryItemLabelGenerator;
+import org.jfree.chart.labels.StandardCategoryToolTipGenerator;
+import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 /**
@@ -34,9 +47,6 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
     private ControladorCultivo controladorCultivo;
     private List<DTOCultivo> listaCultivos = new java.util.ArrayList<>();
 
-    /**
-     * Creates new form IntFrmProduccion
-     */
     public IntFrmProduccion() {
         this(new ControladorProduccion());
     }
@@ -69,26 +79,26 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
     }
     
     private void cargarCultivosCmb() {
-    try {
-        cmbCultivoRelacionado.removeAllItems();
-        listaCultivos.clear();
+       try {
+        
+            cmbCultivoRelacionado.removeAllItems();
+            listaCultivos.clear();
 
-        List<DTOCultivo> cultivos = controladorCultivo.listarCultivos();
+            List<DTOCultivo> cultivos = controladorCultivo.listarCultivos();
 
-        if (cultivos != null && !cultivos.isEmpty()) {
-            for (DTOCultivo cultivo : cultivos) {
-                listaCultivos.add(cultivo); 
-                cmbCultivoRelacionado.addItem(cultivo.getNombre()); 
+            if (cultivos != null && !cultivos.isEmpty()) {
+                for (DTOCultivo cultivo : cultivos) {
+                    listaCultivos.add(cultivo); 
+                    cmbCultivoRelacionado.addItem(cultivo.getNombre()); 
+                }
+            } else {
+                JOptionPane.showMessageDialog(this,"No hay cultivos registrados. Por favor registre cultivos primero.","Advertencia",JOptionPane.WARNING_MESSAGE);
             }
-        } else {
-            JOptionPane.showMessageDialog(this,"No hay cultivos registrados. Por favor registre cultivos primero.","Advertencia",JOptionPane.WARNING_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,"Error al cargar cultivos: " + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
-
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this,"Error al cargar cultivos: " + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
-        e.printStackTrace();
     }
-}
 
     private void cargarTabla() {
         try {
@@ -111,28 +121,28 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
 
         JFreeChart chart = ChartFactory.createBarChart("Porcentaje de Productividad","Indicador","%",dataset,PlotOrientation.VERTICAL,false,true,false);
     
-        org.jfree.chart.plot.CategoryPlot plot = chart.getCategoryPlot();
-        org.jfree.chart.renderer.category.BarRenderer renderer = (org.jfree.chart.renderer.category.BarRenderer) plot.getRenderer();
+        CategoryPlot plot = chart.getCategoryPlot();
+        BarRenderer renderer = (BarRenderer) plot.getRenderer();
 
-        renderer.setBaseToolTipGenerator(new org.jfree.chart.labels.StandardCategoryToolTipGenerator());
+        renderer.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
         renderer.setBaseItemLabelsVisible(true);
-        renderer.setBaseItemLabelGenerator(new org.jfree.chart.labels.StandardCategoryItemLabelGenerator());
-        renderer.setBaseItemLabelFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 14));
-        renderer.setBaseItemLabelPaint(java.awt.Color.BLACK);
+        renderer.setBaseItemLabelGenerator(new StandardCategoryItemLabelGenerator());
+        renderer.setBaseItemLabelFont(new Font("SansSerif", Font.BOLD, 14));
+        renderer.setBaseItemLabelPaint(Color.BLACK);
 
         if (productividadReal >= 80) {
-            renderer.setSeriesPaint(0, new java.awt.Color(76, 175, 80)); 
+            renderer.setSeriesPaint(0, new Color(76, 175, 80)); 
         } else if (productividadReal >= 60) {
-            renderer.setSeriesPaint(0, new java.awt.Color(255, 193, 7)); 
+            renderer.setSeriesPaint(0, new Color(255, 193, 7)); 
         } else if (productividadReal >= 40) {
-            renderer.setSeriesPaint(0, new java.awt.Color(255, 152, 0)); 
+            renderer.setSeriesPaint(0, new Color(255, 152, 0)); 
         } else {
-            renderer.setSeriesPaint(0, new java.awt.Color(244, 67, 54)); 
+            renderer.setSeriesPaint(0, new Color(244, 67, 54)); 
         } 
 
-        org.jfree.chart.axis.ValueAxis rangeAxis = plot.getRangeAxis();
+        ValueAxis rangeAxis = plot.getRangeAxis();
         rangeAxis.setRange(0, 100); 
-        rangeAxis.setStandardTickUnits(org.jfree.chart.axis.NumberAxis.createIntegerTickUnits());
+        rangeAxis.setStandardTickUnits(createIntegerTickUnits());
 
         ChartPanel panel = new ChartPanel(chart);
         panel.setPreferredSize(new Dimension(363, 273));
@@ -196,24 +206,24 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
 
     private void personalizarTituloYBorde() {
         try {
-            javax.swing.plaf.basic.BasicInternalFrameUI ui = (javax.swing.plaf.basic.BasicInternalFrameUI) this.getUI();
+            BasicInternalFrameUI ui = (BasicInternalFrameUI) this.getUI();
 
-            java.awt.Color verdeTitulo = new java.awt.Color(232, 245, 233);
-            javax.swing.JComponent titleBar = ui.getNorthPane();
+            Color verdeTitulo = new Color(232, 245, 233);
+            JComponent titleBar = ui.getNorthPane();
             titleBar.setBackground(verdeTitulo);
             titleBar.setOpaque(true);
 
-            this.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 255, 204), 4));
+            this.setBorder(createLineBorder(new Color(204, 255, 204), 4));
 
-            java.beans.PropertyChangeListener listener = evt -> {
+            PropertyChangeListener listener = evt -> {
                 if ("frameType".equals(evt.getPropertyName())) {
                     this.setForeground(java.awt.Color.WHITE);
                 }
             };
             this.addPropertyChangeListener(listener);
 
-            this.putClientProperty("JInternalFrame.activeTitleForeground", java.awt.Color.WHITE);
-            this.putClientProperty("JInternalFrame.inactiveTitleForeground", java.awt.Color.WHITE);
+            this.putClientProperty("JInternalFrame.activeTitleForeground", Color.WHITE);
+            this.putClientProperty("JInternalFrame.inactiveTitleForeground", Color.WHITE);
 
             this.putClientProperty("JInternalFrame.activeTitleBackground", verdeTitulo);
             this.putClientProperty("JInternalFrame.inactiveTitleBackground", verdeTitulo);
@@ -287,9 +297,7 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
             txtIdCosecha.setText(dto.getIdProduccion().toString());
         
         if (dto.getFecha() != null) {
-            java.util.Date fecha = java.util.Date.from(
-                dto.getFecha().atStartOfDay(ZoneId.systemDefault()).toInstant()
-            );
+            Date fecha = Date.from(dto.getFecha().atStartOfDay(ZoneId.systemDefault()).toInstant());
             dtcFecha.setDate(fecha);
         }
         
@@ -657,7 +665,7 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(pnlPrincipal, javax.swing.GroupLayout.PREFERRED_SIZE, 658, Short.MAX_VALUE)
+            .addComponent(pnlPrincipal, javax.swing.GroupLayout.DEFAULT_SIZE, 658, Short.MAX_VALUE)
         );
 
         pack();
@@ -693,7 +701,7 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
 
                 txtIdCosecha.setText(String.valueOf(idGenerado));
                 
-                JOptionPane.showMessageDialog(this, "Producción registrada correctamente.\n" +"ID asignado: " + idGenerado, "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                
                 
                 cargarTabla();
                 generarGrafica();
@@ -738,20 +746,20 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
 
     private void btnPDFActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPDFActionPerformed
         try {
-        List<ProduccionDTO> producciones = controlador.listarProducciones();
+            List<ProduccionDTO> producciones = controlador.listarProducciones();
         
-        if (producciones == null || producciones.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No hay producciones registradas para generar el reporte.", "Advertencia", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+            if (producciones == null || producciones.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "No hay producciones registradas para generar el reporte.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
         
-        boolean exito = GeneradorPDF.generarReporteProducciones(producciones);
+            boolean exito = GeneradorPDF.generarReporteProducciones(producciones);
         
-        if (exito) {
-            JOptionPane.showMessageDialog(this, "Reporte PDF generado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this, "No se pudo generar el reporte PDF.\n" + "Verifique que la librería iText esté instalada.", "Error", JOptionPane.ERROR_MESSAGE);
-        } 
+            if (exito) {
+                JOptionPane.showMessageDialog(this, "Reporte PDF generado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo generar el reporte PDF.\n" + "Verifique que la librería iText esté instalada.", "Error", JOptionPane.ERROR_MESSAGE);
+            } 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error al generar PDF: " + e.getMessage() + "\n\n" + "Asegúrese de tener la librería itextpdf-5.5.13.3.jar en la carpeta lib/", "Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
@@ -760,21 +768,20 @@ public class IntFrmProduccion extends javax.swing.JInternalFrame {
 
     private void btnXMLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnXMLActionPerformed
         try {
-        List<ProduccionDTO> producciones = controlador.listarProducciones();
+            List<ProduccionDTO> producciones = controlador.listarProducciones();
         
-        if (producciones == null || producciones.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No hay producciones registradas para generar el reporte.", "Advertencia", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+            if (producciones == null || producciones.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "No hay producciones registradas para generar el reporte.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
         
-        boolean exito = GeneradorXML.generarReporteProducciones(producciones);
+            boolean exito = GeneradorXML.generarReporteProducciones(producciones);
         
-        if (exito) {
-            JOptionPane.showMessageDialog(this, "Reporte XML generado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this, "No se pudo generar el reporte XML.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-        
+            if (exito) {
+                JOptionPane.showMessageDialog(this, "Reporte XML generado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo generar el reporte XML.", "Error", JOptionPane.ERROR_MESSAGE);
+            }       
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error al generar XML: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
