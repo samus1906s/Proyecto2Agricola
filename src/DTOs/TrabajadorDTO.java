@@ -1,15 +1,10 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package DTOs;
 
 import Modelo.TipoPuesto;
 import Modelo.TrabajadorCampo;
 
 /**
- * 
- * @author Reynold
+ * * @author Reynold
  */
 public class TrabajadorDTO {
     private int idTrabajador;
@@ -20,11 +15,13 @@ public class TrabajadorDTO {
     private TipoPuesto puesto;
     private TrabajadorCampo tipoTrabajador;
     private double salario;
+    private String horario; 
 
     public TrabajadorDTO() {
     }
 
-    public TrabajadorDTO(int idTrabajador, String cedula, String nombre, String telefono, String correo, TipoPuesto puesto, TrabajadorCampo tipoTrabajador, double salario) {
+   
+    public TrabajadorDTO(int idTrabajador, String cedula, String nombre, String telefono, String correo, TipoPuesto puesto, TrabajadorCampo tipoTrabajador, double salario, String horario) {
         this.idTrabajador = idTrabajador;
         this.cedula = cedula;
         this.nombre = nombre;
@@ -33,6 +30,7 @@ public class TrabajadorDTO {
         this.puesto = puesto;
         this.tipoTrabajador = tipoTrabajador;
         this.salario = salario;
+        this.horario = horario;
     }
 
     public int getIdTrabajador() {
@@ -67,6 +65,11 @@ public class TrabajadorDTO {
         return salario;
     }
 
+  
+    public String getHorario() {
+        return horario;
+    }
+
     public void setIdTrabajador(int idTrabajador) {
         this.idTrabajador = idTrabajador;
     }
@@ -97,6 +100,11 @@ public class TrabajadorDTO {
 
     public void setSalario(double salario) {
         this.salario = salario;
+    }
+    
+
+    public void setHorario(String horario) {
+        this.horario = horario;
     }
    
     @Override

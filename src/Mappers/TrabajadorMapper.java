@@ -2,6 +2,8 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
+
+
 package Mappers;
 
 import DTOs.TrabajadorDTO;
@@ -9,8 +11,7 @@ import Entidades.iMapper;
 import Modelo.Trabajador;
 
 /**
- * 
- * @author Reynold
+ * * @author Reynold
  */
 public class TrabajadorMapper implements iMapper<Trabajador, TrabajadorDTO> {
 
@@ -19,7 +20,7 @@ public class TrabajadorMapper implements iMapper<Trabajador, TrabajadorDTO> {
         if (entidad == null) {
             return null;
         }
-         
+          
         return new TrabajadorDTO(  
             entidad.getIdTrabajador(),
             entidad.getCedula(),
@@ -28,7 +29,8 @@ public class TrabajadorMapper implements iMapper<Trabajador, TrabajadorDTO> {
             entidad.getCorreo(),
             entidad.getPuesto(),
             entidad.getTipoTrabajador(),
-            entidad.getSalario()
+            entidad.getSalario(),
+            entidad.getHorario()
         );
     }
 
@@ -46,7 +48,8 @@ public class TrabajadorMapper implements iMapper<Trabajador, TrabajadorDTO> {
             dto.getCorreo(),
             dto.getPuesto(),
             dto.getTipoTrabajador(),
-            dto.getSalario()
+            dto.getSalario(),
+            dto.getHorario()
         );
     }
 }

@@ -391,7 +391,7 @@
                   <Font name="Bell MT" size="14" style="1"/>
                 </Property>
                 <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                  <Table columnCount="8" rowCount="17">
+                  <Table columnCount="9" rowCount="17">
                     <Column editable="true" title="ID Trabajador" type="java.lang.Object"/>
                     <Column editable="true" title="Cedula" type="java.lang.Object"/>
                     <Column editable="true" title="Nombre" type="java.lang.Object"/>
@@ -400,6 +400,7 @@
                     <Column editable="true" title="Puesto" type="java.lang.Object"/>
                     <Column editable="true" title="Tipo Trabajador" type="java.lang.Object"/>
                     <Column editable="true" title="Salario" type="java.lang.Object"/>
+                    <Column editable="true" title="Horario" type="java.lang.Object"/>
                   </Table>
                 </Property>
               </Properties>

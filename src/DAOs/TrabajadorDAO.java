@@ -21,8 +21,8 @@ public class TrabajadorDAO implements ITrabajadorDAO {
     
     @Override
     public boolean crear(Trabajador t) throws Exception {
-        String sql = "INSERT INTO trabajador (cedula, nombre, telefono, correo, puesto, tipo_trabajador, salario) VALUES (?, ?, ?, ?, ?, ?, ?)";
-
+        String sql = "INSERT INTO trabajador (cedula, nombre, telefono, correo, puesto, tipo_trabajador, salario, horario) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        
         Connection con = ConexionBD.getConnection();
         PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
@@ -33,6 +33,7 @@ public class TrabajadorDAO implements ITrabajadorDAO {
         ps.setString(5, t.getPuesto().name());
         ps.setString(6, t.getTipoTrabajador().name());
         ps.setDouble(7, t.getSalario());
+        ps.setString(8, t.getHorario());
 
         int rows = ps.executeUpdate();
 
@@ -72,6 +73,7 @@ public class TrabajadorDAO implements ITrabajadorDAO {
             t.setPuesto(TipoPuesto.valueOf(rs.getString("puesto")));
             t.setTipoTrabajador(TrabajadorCampo.valueOf(rs.getString("tipo_trabajador")));
             t.setSalario(rs.getDouble("salario"));
+            t.setHorario(rs.getString("horario")); 
         }
         
         rs.close();
@@ -81,7 +83,7 @@ public class TrabajadorDAO implements ITrabajadorDAO {
 
     @Override
     public List<Trabajador> lista() throws Exception {
-        List<Trabajador> lista = new ArrayList<>();
+         List<Trabajador> lista = new ArrayList<>();
         String sql = "SELECT * FROM trabajador";
     
         Connection con = ConexionBD.getConnection();
@@ -89,22 +91,24 @@ public class TrabajadorDAO implements ITrabajadorDAO {
         ResultSet rs = st.executeQuery(sql);
         
         while (rs.next()) {
-
             Trabajador t = new Trabajador();
+            
             
             t.setIdTrabajador(rs.getInt("id_trabajador"));
             t.setCedula(rs.getString("cedula"));
             t.setNombre(rs.getString("nombre"));
- 
+            
+           
             String telefonoBD = rs.getString("telefono");
-            String telefonoLimpio = telefonoBD != null ? telefonoBD.replaceAll("[^0-9-]", "") : "";
-            t.setTelefonoSinValidar(telefonoLimpio);
-
+            t.setTelefonoSinValidar(telefonoBD != null ? telefonoBD.replaceAll("[^0-9-]", "") : "");
             t.setCorreoSinValidar(rs.getString("correo"));
             
             t.setPuesto(TipoPuesto.valueOf(rs.getString("puesto")));
             t.setTipoTrabajador(TrabajadorCampo.valueOf(rs.getString("tipo_trabajador")));
             t.setSalario(rs.getDouble("salario"));
+            
+        
+            t.setHorario(rs.getString("horario")); 
             
             lista.add(t);
         }
@@ -116,7 +120,8 @@ public class TrabajadorDAO implements ITrabajadorDAO {
 
     @Override
     public boolean actualizar(Trabajador t) throws Exception {
-        String sql = "UPDATE trabajador SET cedula=?, nombre=?, telefono=?, correo=?, puesto=?, tipo_trabajador=?, salario=? WHERE id_trabajador=?";
+     
+        String sql = "UPDATE trabajador SET cedula=?, nombre=?, telefono=?, correo=?, puesto=?, tipo_trabajador=?, salario=?, horario=? WHERE id_trabajador=?";
 
         Connection con = ConexionBD.getConnection();
         PreparedStatement ps = con.prepareStatement(sql);
@@ -128,7 +133,12 @@ public class TrabajadorDAO implements ITrabajadorDAO {
         ps.setString(5, t.getPuesto().name());
         ps.setString(6, t.getTipoTrabajador().name());
         ps.setDouble(7, t.getSalario());
-        ps.setInt(8, t.getIdTrabajador());
+        
+      
+        ps.setString(8, t.getHorario());
+        
+     
+        ps.setInt(9, t.getIdTrabajador());
 
         int rows = ps.executeUpdate();
         ps.close();
@@ -153,7 +163,8 @@ public class TrabajadorDAO implements ITrabajadorDAO {
     @Override
     public List<Trabajador> Buscar(String texto) throws Exception {
         List<Trabajador> lista = new ArrayList<>();
-        String sql = "SELECT * FROM produccion WHERE id = ?";
+      
+        String sql = "SELECT * FROM trabajador WHERE nombre LIKE ? OR cedula LIKE ? OR puesto LIKE ?"; 
 
         Connection con = ConexionBD.getConnection();
         PreparedStatement ps = con.prepareStatement(sql);
@@ -162,8 +173,7 @@ public class TrabajadorDAO implements ITrabajadorDAO {
         ps.setString(1, busqueda);
         ps.setString(2, busqueda);
         ps.setString(3, busqueda);
-        ps.setString(4, busqueda);
-
+        
         ResultSet rs = ps.executeQuery();
 
         while (rs.next()) {
@@ -185,6 +195,9 @@ public class TrabajadorDAO implements ITrabajadorDAO {
             t.setTipoTrabajador(tipoStr != null ? TrabajadorCampo.valueOf(tipoStr) : null);
             
             t.setSalario(rs.getDouble("salario"));
+            
+           
+            t.setHorario(rs.getString("horario"));
             
             lista.add(t);
         }
@@ -224,10 +237,12 @@ public class TrabajadorDAO implements ITrabajadorDAO {
             t.setTipoTrabajador(tipoStr != null ? TrabajadorCampo.valueOf(tipoStr) : null);
             
             t.setSalario(rs.getDouble("salario"));
+            
+            
+            t.setHorario(rs.getString("horario"));
         }
 
         rs.close();
         ps.close();
         return t;
-    }
-}
+}}

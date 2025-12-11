@@ -2,6 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
+
 package Controlador;
 
 import DTOs.TrabajadorDTO;
@@ -9,8 +10,7 @@ import Servicios.TrabajadorServicio;
 import java.util.List;
 
 /**
- * 
- * @author Reynold
+ * * @author Reynold
  */
 public class ControladorTrabajador {
     private final TrabajadorServicio servicio;
@@ -30,9 +30,16 @@ public class ControladorTrabajador {
         if (dto.getSalario() <= 0) {
             throw new Exception("El salario debe ser mayor a cero");
         }
-        if (servicio.existeCedula(dto.getCedula())) {
-            throw new Exception("Ya existe un trabajador con esta cédula");
+       
+        if (dto.getHorario() == null || dto.getHorario().trim().isEmpty()) {
+            throw new Exception("El horario es requerido");
         }
+
+       
+        if (servicio.existeCedula(dto.getCedula())) {
+            throw new Exception("Ya existe un trabajador registrado con esta cédula");
+        }
+        
         
         return servicio.registrar(dto);
     }
@@ -46,6 +53,9 @@ public class ControladorTrabajador {
         }
         if (dto.getSalario() <= 0) {
             throw new Exception("El salario debe ser mayor a cero");
+        }
+        if (dto.getHorario() == null || dto.getHorario().trim().isEmpty()) {
+            throw new Exception("El horario es requerido");
         }
         
         return servicio.actualizar(dto);

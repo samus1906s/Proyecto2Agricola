@@ -86,7 +86,9 @@ public class IntFrmTablaTrabajadores extends javax.swing.JInternalFrame {
         
             if (trabajadores != null && !trabajadores.isEmpty()) {
                 for (TrabajadorDTO t : trabajadores) {
-                    Object[] fila = new Object[8];
+                 
+                    Object[] fila = new Object[9]; 
+                    
                     fila[0] = t.getIdTrabajador();
                     fila[1] = t.getCedula();
                     fila[2] = t.getNombre();
@@ -95,6 +97,9 @@ public class IntFrmTablaTrabajadores extends javax.swing.JInternalFrame {
                     fila[5] = t.getPuesto();
                     fila[6] = t.getTipoTrabajador();
                     fila[7] = "₡" + String.format("%.2f", t.getSalario());
+                    
+                    
+                    fila[8] = t.getHorario(); 
                 
                     modelo.addRow(fila);
                 }
@@ -467,26 +472,26 @@ public class IntFrmTablaTrabajadores extends javax.swing.JInternalFrame {
         tblTrabajadores.setFont(new java.awt.Font("Bell MT", 1, 14)); // NOI18N
         tblTrabajadores.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null}
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null}
             },
             new String [] {
-                "ID Trabajador", "Cedula", "Nombre", "Teléfono", "Correo", "Puesto", "Tipo Trabajador", "Salario"
+                "ID Trabajador", "Cedula", "Nombre", "Teléfono", "Correo", "Puesto", "Tipo Trabajador", "Salario", "Horario"
             }
         ));
         scpTabla.setViewportView(tblTrabajadores);
