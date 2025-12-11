@@ -8,9 +8,7 @@ package Modelo;
  *
  * @author Reynold
  */
-public enum TrabajadorCampo {
-    
-    RECOLECTOR,
-    RIEGO,
-    SIEMBRO;
+public enum EstadoUsuario {
+    ACTIVO,
+    INACTIVO
 }

@@ -4,46 +4,49 @@
  */
 package Mappers;
 
-import DTOs.TrabajadorDto;
+import DTOs.TrabajadorDTO;
 import Entidades.iMapper;
 import Modelo.Trabajador;
 
 /**
- *
+ * 
  * @author Reynold
  */
-public class TrabajadorMapper implements iMapper<Trabajador, TrabajadorDto>{
+public class TrabajadorMapper implements iMapper<Trabajador, TrabajadorDTO> {
 
     @Override
-    public TrabajadorDto ToDto(Trabajador entidad) {
-        if (entidad == null) return null;
+    public TrabajadorDTO ToDto(Trabajador entidad) {
+        if (entidad == null) {
+            return null;
+        }
          
-        return new TrabajadorDto(  
-                entidad.getId(),
-                entidad.getCedula(),
-                entidad.getNombre(),
-                entidad.getTelefono(),
-                entidad.getCorreo(),
-                entidad.getPuesto(),
-                entidad.getTipo(),
-                entidad.getSalario()
+        return new TrabajadorDTO(  
+            entidad.getIdTrabajador(),
+            entidad.getCedula(),
+            entidad.getNombre(),
+            entidad.getTelefono(),
+            entidad.getCorreo(),
+            entidad.getPuesto(),
+            entidad.getTipoTrabajador(),
+            entidad.getSalario()
         );
     }
 
     @Override
-    public Trabajador ToEntidad(TrabajadorDto dto) {
-        if (dto == null) return null;
+    public Trabajador ToEntidad(TrabajadorDTO dto) {
+        if (dto == null) {
+            return null;
+        }
 
         return new Trabajador(
-                dto.getId(),
-                dto.getPuesto(),
-                dto.getTipoTrabajador(),
-                dto.getSalario(),
-                dto.getCedula(),
-                dto.getNombre(),
-                dto.getTelefono(),
-                dto.getCorreo()
+            dto.getIdTrabajador(),
+            dto.getCedula(),
+            dto.getNombre(),
+            dto.getTelefono(),
+            dto.getCorreo(),
+            dto.getPuesto(),
+            dto.getTipoTrabajador(),
+            dto.getSalario()
         );
     }
-    
 }

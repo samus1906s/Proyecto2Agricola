@@ -9,7 +9,7 @@ import Modelo.RolUsuario;
 
 /**
  * 
- * @author je110
+ * @author Reynold
  */
 public class SesionUsuario {
     

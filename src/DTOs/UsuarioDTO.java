@@ -2,16 +2,19 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package Modelo;
+package DTOs;
 
+import Modelo.RolUsuario;
+import Modelo.EstadoUsuario;
 import java.time.LocalDateTime;
 
 /**
  *
  * @author Reynold
  */
-public class Usuario {
-    private int id;
+public class UsuarioDTO {
+    
+    private Integer id;
     private String nombreCompleto;
     private String usuario;
     private String email;
@@ -21,10 +24,10 @@ public class Usuario {
     private LocalDateTime fechaCreacion;
     private LocalDateTime ultimoAcceso;
 
-    public Usuario() {
+    public UsuarioDTO() {
     }
 
-    public Usuario(int id, String nombreCompleto, String usuario, String email, RolUsuario rol, String contrasena, EstadoUsuario estado, LocalDateTime fechaCreacion, LocalDateTime ultimoAcceso) {
+    public UsuarioDTO(Integer id, String nombreCompleto, String usuario, String email, RolUsuario rol, String contrasena, EstadoUsuario estado, LocalDateTime fechaCreacion, LocalDateTime ultimoAcceso) {
         this.id = id;
         this.nombreCompleto = nombreCompleto;
         this.usuario = usuario;
@@ -36,7 +39,7 @@ public class Usuario {
         this.ultimoAcceso = ultimoAcceso;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
@@ -72,7 +75,7 @@ public class Usuario {
         return ultimoAcceso;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

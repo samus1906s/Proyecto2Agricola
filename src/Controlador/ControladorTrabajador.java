@@ -4,83 +4,86 @@
  */
 package Controlador;
 
-import DTOs.TrabajadorDto;
-import Servicios.ServicioTrabajador;
+import DTOs.TrabajadorDTO;
+import Servicios.TrabajadorServicio;
 import java.util.List;
 
 /**
- *
- * @author Student
+ * 
+ * @author Reynold
  */
 public class ControladorTrabajador {
-    private final ServicioTrabajador servicio;
+    private final TrabajadorServicio servicio;
 
     public ControladorTrabajador() {
-        this.servicio = new ServicioTrabajador();
+        this.servicio = new TrabajadorServicio();
     }
 
-    public boolean registrarTrabajador(TrabajadorDto dto) throws Exception{
-        if (dto.getCedula() ==null || dto.getCedula().trim().isEmpty()){
+    public boolean registrarTrabajador(TrabajadorDTO dto) throws Exception {
+        
+        if (dto.getCedula() == null || dto.getCedula().trim().isEmpty()) {
             throw new Exception("La cédula es requerida");
         }
-        if (dto.getNombre() ==null || dto.getNombre().trim().isEmpty()){
+        if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
             throw new Exception("El nombre es requerido");
         }
-        if (dto.getSalario() <= 0){
+        if (dto.getSalario() <= 0) {
             throw new Exception("El salario debe ser mayor a cero");
         }
-        if (servicio.existeCedula(dto.getCedula())){
+        if (servicio.existeCedula(dto.getCedula())) {
             throw new Exception("Ya existe un trabajador con esta cédula");
         }
+        
         return servicio.registrar(dto);
     }
 
-    public boolean actualizarTrabajador(TrabajadorDto dto) throws Exception{
-        if (dto.getId() <= 0){
+    public boolean actualizarTrabajador(TrabajadorDTO dto) throws Exception {
+        if (dto.getIdTrabajador() <= 0) {
             throw new Exception("ID de trabajador inválido");
         }
-        if (dto.getNombre() ==null || dto.getNombre().trim().isEmpty()){
+        if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) {
             throw new Exception("El nombre es requerido");
         }
-        if (dto.getSalario() <= 0){
+        if (dto.getSalario() <= 0) {
             throw new Exception("El salario debe ser mayor a cero");
         }
+        
         return servicio.actualizar(dto);
     }
 
-    public boolean eliminarTrabajador(int id) throws Exception{
-        if (id <= 0){
+    public boolean eliminarTrabajador(int id) throws Exception {
+        if (id <= 0) {
             throw new Exception("ID de trabajador inválido");
         }
         return servicio.eliminar(id);
     }
 
-    public TrabajadorDto obtenerTrabajador(int id) throws Exception{
-        if (id <= 0){
+    public TrabajadorDTO obtenerTrabajador(int id) throws Exception {
+        if (id <= 0) {
             throw new Exception("ID de trabajador inválido");
         }
         return servicio.obtenerPorId(id);
     }
 
-    public List<TrabajadorDto> listarTrabajadores() throws Exception{
+    public List<TrabajadorDTO> listarTrabajadores() throws Exception {
         return servicio.listar();
     }
 
-    public List<TrabajadorDto> buscar(String texto) throws Exception{
+    public List<TrabajadorDTO> buscar(String texto) throws Exception {
         if (texto == null || texto.trim().isEmpty()) {
             return listarTrabajadores();
         }
         return servicio.buscar(texto);
     }
 
-    public TrabajadorDto buscarPorCedula(String cedula) throws Exception{
+    public TrabajadorDTO buscarPorCedula(String cedula) throws Exception {
         if (cedula == null || cedula.trim().isEmpty()) {
             throw new Exception("La cédula es requerida");
         }
         return servicio.buscarPorCedula(cedula);
     }
 
-    public boolean existeCedula(String cedula) throws Exception{
+    public boolean existeCedula(String cedula) throws Exception {
         return servicio.existeCedula(cedula);
     }
 }
