@@ -29,7 +29,7 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 /**
  *
- * @author je110
+ * @author Valdelomaar
  */
 public class IntFrmTablaTrabajadores extends javax.swing.JInternalFrame {
 

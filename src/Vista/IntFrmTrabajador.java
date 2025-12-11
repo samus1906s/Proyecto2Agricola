@@ -19,7 +19,7 @@ import javax.swing.JOptionPane;
 import javax.swing.plaf.basic.BasicInternalFrameUI;
 /**
  *
- * @author je110
+ * @author Valdelomaar
  */
 public class IntFrmTrabajador extends javax.swing.JInternalFrame {
 

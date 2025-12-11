@@ -18,7 +18,7 @@ import javax.swing.JDesktopPane;
 import javax.swing.plaf.basic.BasicInternalFrameUI;
 /**
  *
- * @author je110
+ * @author Valdelomaar
  */
 public class IntFrmCultivo extends javax.swing.JInternalFrame {
 
